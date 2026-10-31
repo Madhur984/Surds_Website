@@ -20,11 +20,15 @@ import datetime
 import urllib.parse
 
 ROUTES = {
-    "/": "/views/home/index.html",
+    "/": "/views/render/index.html",        # the city-build intro opens the site
+    "/home": "/views/home/index.html",
     "/classic": "/views/main/index.html",
     "/enterprise": "/views/enterprise/index.html",
     "/card-tour": "/views/card-tour/index.html",
     "/survey": "/survey.html",
+    "/data-center": "/views/data-center/index.html",
+    "/render": "/views/render/index.html",
+    "/explore": "/views/explore/index.html",
 }
 
 SURVEY_DIR = "surds survey"

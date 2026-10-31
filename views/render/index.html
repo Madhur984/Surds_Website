@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SURDS | City render</title>
+<meta name="description" content="Isometric night render of a SURDS-connected district: commercial buildings, data centers, energy, clean rooms, healthcare and a substation on one intelligence layer.">
+<link rel="icon" href="/shared/favicon.svg">
+<link rel="stylesheet" href="/shared/fonts.css">
+<style>
+  :root { --bg: #050506; --ink: #f2f2f0; --muted: #8a8a90; --amber: #ff9a3c; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--ink); }
+  body { font-family: "Nunito Sans", system-ui, sans-serif; overflow-x: hidden; }
+
+  .stage { position: relative; min-height: 100vh; display: grid; place-items: center; }
+  .stage video, .stage img { width: 100%; height: 100vh; object-fit: cover; display: block; background: var(--bg); }
+  .stage img { position: absolute; inset: 0; visibility: hidden; }
+  .still .stage img { visibility: visible; }
+  .still .stage video { visibility: hidden; }
+
+  .actions {
+    position: absolute; right: clamp(16px, 4vw, 56px); bottom: clamp(24px, 6vh, 64px);
+    display: flex; gap: 10px; align-items: center;
+  }
+  .enter {
+    font-size: 13px; letter-spacing: .14em; text-transform: uppercase; font-weight: 600; text-decoration: none;
+    color: #050506; background: var(--amber); border-radius: 999px; padding: 12px 22px;
+    opacity: 0; pointer-events: none; transition: opacity .6s, background .2s;
+  }
+  .enter:hover { background: #ffb36b; }
+  .done .enter, .still .enter { opacity: 1; pointer-events: auto; }
+  .replay {
+    font: inherit; font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--ink); background: rgba(5,5,6,.6); border: 1px solid #3a3a40; border-radius: 999px;
+    padding: 10px 18px; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .6s;
+  }
+  .replay:hover { border-color: var(--amber); }
+  .done .replay { opacity: 1; pointer-events: auto; }
+
+  .bar {
+    position: absolute; inset: 0 0 auto 0; padding: 28px clamp(16px, 4vw, 56px);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .logo { color: var(--ink); text-decoration: none; letter-spacing: .4em; font-weight: 600; font-size: 15px; }
+  .back { color: var(--muted); text-decoration: none; font-size: 13px; letter-spacing: .08em; }
+  .back:hover { color: var(--ink); }
+
+  .caption {
+    opacity: 0; transform: translateY(12px); transition: opacity 1s, transform 1s;
+    position: absolute; left: clamp(16px, 4vw, 56px); bottom: clamp(24px, 6vh, 64px); max-width: 30rem;
+  }
+  .caption .eyebrow { font-size: 11px; letter-spacing: .32em; text-transform: uppercase; color: var(--amber); }
+  .caption h1 { font-weight: 300; font-size: clamp(28px, 4vw, 52px); line-height: 1.08; margin: 12px 0; }
+  .caption h1 span { color: var(--muted); }
+  .caption p { color: var(--muted); font-size: 15px; line-height: 1.6; }
+  .done .caption, .still .caption { opacity: 1; transform: none; }
+  .caption::before {
+    content: ""; position: absolute; inset: -40px -60px -40px -80px; z-index: -1;
+    background: radial-gradient(ellipse at 30% 60%, rgba(5,5,6,.85), rgba(5,5,6,0) 70%);
+  }
+</style>
+</head>
+<body>
+<main class="stage">
+  <video id="build" muted playsinline preload="auto" width="1920" height="1080"
+         poster="/views/render/city-start.webp" aria-label="A city district being built by cranes, then linked by the SURDS network.">
+    <source src="/views/render/city-build.mp4" type="video/mp4">
+  </video>
+  <img src="/views/render/city.webp" width="1920" height="1080" loading="lazy"
+       alt="Isometric night view of a city district. A tall glass tower, offices, a data center, a power plant, a clean-room lab, a hospital and a substation are linked by glowing amber lines running along the roads to a central hub.">
+  <header class="bar">
+    <a class="logo" href="/home">SURDS</a>
+    <a class="back" href="/home">Skip intro →</a>
+  </header>
+  <div class="caption">
+    <div class="eyebrow">A connected physical world</div>
+    <h1>One intelligence layer <span>for every building.</span></h1>
+    <p>Offices, data centers, energy, clean rooms and healthcare, all sensed and connected through SURDS.</p>
+  </div>
+  <div class="actions">
+    <button class="replay" type="button">↻ Replay build</button>
+    <a class="enter" href="/home">Enter the site →</a>
+  </div>
+</main>
+<script>
+  const root = document.documentElement;
+  const video = document.getElementById("build");
+  const still = () => root.classList.add("still");
+
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    still();
+  } else {
+    video.addEventListener("ended", () => root.classList.add("done"));
+    video.addEventListener("error", still, true);
+    video.play().catch(still);
+    document.querySelector(".replay").addEventListener("click", () => {
+      root.classList.remove("done");
+      video.currentTime = 0;
+      video.play();
+    });
+  }
+</script>
+</body>
+</html>

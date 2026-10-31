@@ -106,7 +106,7 @@
              '" y2="' + gy.toFixed(1) + '" stroke="currentColor" stroke-opacity="0.13" ' +
              'stroke-width="1" stroke-dasharray="2 4"/>';
       out += '<text x="' + (padL - 6) + '" y="' + (gy + 3).toFixed(1) + '" text-anchor="end" ' +
-             'font-family="Nunito Sans, sans-serif" font-size="7" fill="currentColor" ' +
+             'font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="7" fill="currentColor" ' +
              'fill-opacity="0.42">' + fmt(gv, gv < 10 ? 1 : 0) + '</text>';
     }
 
@@ -150,10 +150,10 @@
              '" r="2" fill="' + sr.color + '"/>';
     }
 
-    out += '<text x="' + padL + '" y="' + (h - 4) + '" font-family="Nunito Sans, sans-serif" ' +
+    out += '<text x="' + padL + '" y="' + (h - 4) + '" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" ' +
            'font-size="7" fill="currentColor" fill-opacity="0.38">-' + this.window + 'S</text>';
     out += '<text x="' + (padL + iw) + '" y="' + (h - 4) + '" text-anchor="end" ' +
-           'font-family="Nunito Sans, sans-serif" font-size="7" fill="currentColor" ' +
+           'font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="7" fill="currentColor" ' +
            'fill-opacity="0.38">NOW</text>';
 
     this.svg.innerHTML = out;

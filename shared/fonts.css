@@ -1,51 +1,67 @@
-/* Nunito Sans — the only typeface on the site.
-   Self-hosted variable woff2 (weight 200–1000) from Google Fonts, with the
-   identical Google-hosted file as a fallback if the local path doesn't resolve,
-   https://fonts.google.com/specimen/Nunito+Sans */
+/* Site type: Instrument Serif for headlines, Inter for everything else.
+   Both self-hosted woff2 (from Fontsource). To change a typeface, swap its faces
+   here and the family name in the stacks (search the repo for "Inter," / "Instrument Serif"). */
 
-/* latin-ext */
+/* ---- Inter (variable, 100–900) ---- */
 @font-face {
-  font-family: 'Nunito Sans';
+  font-family: 'Inter';
   font-style: normal;
-  font-weight: 200 1000;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('/shared/fonts/nunito-sans-normal-latin-ext.woff2') format('woff2'),
-       url('https://fonts.gstatic.com/s/nunitosans/v19/pe0AMImSLYBIv1o4X1M8ce2xCx3yop4tQpF_MeTm0lfUVwoNnq4CLz0_kJPxzGOF.woff2') format('woff2');
+  src: url('/shared/fonts/inter-var-latin-ext.woff2') format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
-/* latin */
 @font-face {
-  font-family: 'Nunito Sans';
+  font-family: 'Inter';
   font-style: normal;
-  font-weight: 200 1000;
+  font-weight: 100 900;
   font-display: swap;
-  src: url('/shared/fonts/nunito-sans-normal-latin.woff2') format('woff2'),
-       url('https://fonts.gstatic.com/s/nunitosans/v19/pe0AMImSLYBIv1o4X1M8ce2xCx3yop4tQpF_MeTm0lfUVwoNnq4CLz0_kJ3xzA.woff2') format('woff2');
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-/* latin-ext italic */
-@font-face {
-  font-family: 'Nunito Sans';
-  font-style: italic;
-  font-weight: 200 1000;
-  font-display: swap;
-  src: url('/shared/fonts/nunito-sans-italic-latin-ext.woff2') format('woff2'),
-       url('https://fonts.gstatic.com/s/nunitosans/v19/pe0OMImSLYBIv1o4X1M8cce4OdVisMz5nZRqy6cmmmU3t3NeCAAFOvV9SNjBwHuBZFI.woff2') format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-/* latin italic */
-@font-face {
-  font-family: 'Nunito Sans';
-  font-style: italic;
-  font-weight: 200 1000;
-  font-display: swap;
-  src: url('/shared/fonts/nunito-sans-italic-latin.woff2') format('woff2'),
-       url('https://fonts.gstatic.com/s/nunitosans/v19/pe0OMImSLYBIv1o4X1M8cce4OdVisMz5nZRqy6cmmmU3t3NeCAAFOvV9SNjBznuB.woff2') format('woff2');
+  src: url('/shared/fonts/inter-var-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* Base: everything inherits Nunito Sans, including form controls, which
-   browsers otherwise render in the system UI font. */
+/* ---- Instrument Serif (400, roman + italic) ---- */
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/shared/fonts/instrument-serif-400-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/shared/fonts/instrument-serif-400-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/shared/fonts/instrument-serif-400-italic-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/shared/fonts/instrument-serif-400-italic-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Body: Inter everywhere, including form controls (browsers otherwise use the system font). */
 html, body, button, input, select, textarea, optgroup {
-  font-family: 'Nunito Sans', sans-serif;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+/* Headlines: the serif. It ships in one weight, so pages' bolder heading weights
+   are reset here rather than letting the browser fake a bold. */
+h1, h2 {
+  font-family: Instrument Serif, Georgia, Times New Roman, serif !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.005em !important;
 }

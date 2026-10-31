@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SURDS | Inside a data center</title>
+<meta name="description" content="An interactive, floor-by-floor look inside a data center: cooling on the roof, server halls, the network core and AI pod, power and operations, and the generator and chiller plant. And where SURDS sensors watch each one.">
+<link rel="icon" href="/shared/favicon.svg">
+<link rel="stylesheet" href="/shared/fonts.css">
+<link rel="preload" href="/shared/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/shared/fonts/instrument-serif-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/views/data-center/dc.css?v=8">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header class="dc-nav">
+  <a class="logo" href="/home" aria-label="SURDS home"><span class="mark">√</span>SURDS</a>
+  <nav>
+    <a href="/home">Home</a>
+    <a href="/home#network">Connected world</a>
+    <a class="btn" href="/home#contact">Book a pilot</a>
+  </nav>
+</header>
+
+<canvas id="dc3d" aria-label="Interactive 3D model of a data center, taken apart floor by floor"></canvas>
+<div id="overlay" aria-hidden="false"></div>
+<div id="loading">Building the data center…</div>
+
+<aside class="rail" aria-label="Jump to a level">
+  <button type="button" data-go="explode">Overview</button>
+  <button type="button" data-go="fpower" class="fl" style="--fc:#ffc23d">Power path</button>
+  <button type="button" data-go="fheat" class="fl" style="--fc:#ff6a3d">Heat path</button>
+  <button type="button" data-go="fdata" class="fl" style="--fc:#3fd0ff">Data path</button>
+  <button type="button" data-go="roof"><em>4</em>Roof</button>
+  <button type="button" data-go="hall"><em>3</em>Data hall</button>
+  <button type="button" data-go="net"><em>2</em>Network &amp; AI</button>
+  <button type="button" data-go="power"><em>1</em>Power &amp; ops</button>
+  <button type="button" data-go="plant"><em>0</em>Plant</button>
+</aside>
+
+<main class="steps">
+  <section class="step" data-key="intro">
+    <div class="card">
+      <h1>Inside a data&nbsp;center</h1>
+      <p>Five levels that keep the internet running: cooling on the roof, servers in the halls, power and fuel below.</p>
+      <p class="hint">Scroll to take it apart <span>↓</span></p>
+    </div>
+  </section>
+
+  <section class="step" data-key="explode">
+    <div class="card">
+      <h2>One building, five jobs</h2>
+      <p>Cooling on top, servers in the middle, power and fuel below. Next, follow the three things that flow through it: power, heat and data.</p>
+      <dl class="facts"><div><dt>Levels</dt><dd>5</dd></div><div><dt>Server racks</dt><dd>448</dd></div><div><dt>IT load</dt><dd>~4 MW</dd></div><div><dt>Off-grid</dt><dd>48 h</dd></div></dl>
+      <p class="note">Typical figures for a building this size. Drag the model to turn it.</p>
+    </div>
+  </section>
+
+  <section class="step" data-key="fpower">
+    <div class="card flow-card" style="--fc:#ffc23d">
+      <span class="lvl">Follow the power</span>
+      <h2>From the grid to every server</h2>
+      <p>Power takes the same route every second of every day. If any link fails, the next one is already running.</p>
+      <ol class="stages"><li><b>1</b><span><strong>Grid in</strong>The utility feed arrives and transformers step it down.</span></li><li><b>2</b><span><strong>Generators</strong>If the grid fails, they start and take the load in about 10 seconds.</span></li><li><b>3</b><span><strong>Switchgear</strong>Picks grid or generator, automatically.</span></li><li><b>4</b><span><strong>UPS and batteries</strong>Carry every rack through those 10 seconds. Two systems, A and B.</span></li><li><b>5</b><span><strong>Busway</strong>Two separate feeds run over every row.</span></li><li><b>6</b><span><strong>Racks</strong>Each server has two power supplies, one on each feed.</span></li></ol>
+    </div>
+  </section>
+
+  <section class="step" data-key="fheat">
+    <div class="card flow-card" style="--fc:#ff6a3d">
+      <span class="lvl">Follow the heat</span>
+      <h2>Every watt becomes heat</h2>
+      <p>Servers turn almost all their power into heat. Water carries it up to the roof and comes back cold.</p>
+      <ol class="stages"><li><b>1</b><span><strong>Servers</strong>Heat leaves the back of every rack into the hot aisle.</span></li><li><b>2</b><span><strong>CRAH units</strong>Hall air passes over cold-water coils and goes back under the floor, cool.</span></li><li><b>3</b><span><strong>Warm water rises</strong>The orange riser carries the heat up through the building.</span></li><li><b>4</b><span><strong>Roof plant</strong>Fans push the heat into the outside air.</span></li><li><b>5</b><span><strong>Chillers</strong>On the hottest days they chill the water before it goes back down (blue).</span></li></ol>
+    </div>
+  </section>
+
+  <section class="step" data-key="fdata">
+    <div class="card flow-card" style="--fc:#3fd0ff">
+      <span class="lvl">Follow the data</span>
+      <h2>Where the internet comes in</h2>
+      <p>Fibre from the outside world lands in one room, then fans out to every rack in the building.</p>
+      <ol class="stages"><li><b>1</b><span><strong>Carriers</strong>Internet providers hand over their fibre in locked cages.</span></li><li><b>2</b><span><strong>Patch frames</strong>Every link ends here as a labelled jumper.</span></li><li><b>3</b><span><strong>Core routers</strong>The backbone: they move traffic in and out of the building.</span></li><li><b>4</b><span><strong>AI racks</strong>GPU racks get the fastest links on the network floor.</span></li><li><b>5</b><span><strong>Server rows</strong>Yellow trays carry fibre up to every row in the data hall.</span></li></ol>
+    </div>
+  </section>
+
+  <section class="step" data-key="roof" data-floor="4">
+    <div class="card">
+      <span class="lvl">Level 4 · Roof</span>
+      <h2>Heat goes out</h2>
+      <p>Every watt a server uses ends up as heat. The roof throws it into the outside air.</p>
+      <dl class="facts"><div><dt>Cooling units</dt><dd>6</dd></div><div><dt>Fans</dt><dd>48</dd></div><div><dt>Heat out</dt><dd>~5 MW</dd></div></dl>
+      <ol class="parts"></ol>
+    </div>
+  </section>
+
+  <section class="step" data-key="hall" data-floor="3">
+    <div class="card">
+      <span class="lvl">Level 3 · Data hall</span>
+      <h2>Where the servers live</h2>
+      <p>Hundreds of racks in sealed aisles, fed cold air from under the floor and power and fibre from above.</p>
+      <dl class="facts"><div><dt>Racks</dt><dd>448</dd></div><div><dt>Per rack</dt><dd>5–15 kW</dd></div><div><dt>Air in</dt><dd>18–27 °C</dd></div></dl>
+      <ol class="parts"></ol>
+    </div>
+  </section>
+
+  <section class="step" data-key="net" data-floor="2">
+    <div class="card">
+      <span class="lvl">Level 2 · Network and AI</span>
+      <h2>Where the internet comes in</h2>
+      <p>Carriers hand over their fibre in the meet-me room. Next door, liquid-cooled GPU racks train AI.</p>
+      <dl class="facts"><div><dt>Carriers</dt><dd>4</dd></div><div><dt>GPU racks</dt><dd>40</dd></div><div><dt>Per GPU rack</dt><dd>40–100 kW</dd></div></dl>
+      <ol class="parts"></ol>
+    </div>
+  </section>
+
+  <section class="step" data-key="power" data-floor="1">
+    <div class="card">
+      <span class="lvl">Level 1 · Power and operations</span>
+      <h2>Power that never blinks</h2>
+      <p>Switchgear, UPS and batteries hold the load until the generators take over. The control room watches all of it.</p>
+      <dl class="facts"><div><dt>Power systems</dt><dd>A + B</dd></div><div><dt>Battery time</dt><dd>~10 min</dd></div><div><dt>Staffed</dt><dd>24/7</dd></div></dl>
+      <ol class="parts"></ol>
+    </div>
+  </section>
+
+  <section class="step" data-key="plant" data-floor="0">
+    <div class="card">
+      <span class="lvl">Level 0 · Plant</span>
+      <h2>The heavy machinery</h2>
+      <p>Diesel generators, fuel, chillers and pumps: everything the racks upstairs depend on.</p>
+      <dl class="facts"><div><dt>Generators</dt><dd>4 × 2.5 MW</dd></div><div><dt>Fuel</dt><dd>~48 h</dd></div><div><dt>Chillers</dt><dd>3</dd></div></dl>
+      <ol class="parts"></ol>
+    </div>
+  </section>
+
+  <section class="step" data-key="outro">
+    <div class="card">
+      <h2>SURDS watches every level</h2>
+      <p>Temperature at the rack, water under the floor, heat in the battery room, people in the aisles. One wireless mesh, one live view.</p>
+      <div class="ctas">
+        <a class="btn" href="/home#contact">Book a pilot →</a>
+        <a class="btn ghost" href="/home#network">Back to the city</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="part-card" id="partCard" role="dialog" aria-modal="false" aria-labelledby="pcTitle" hidden>
+  <button type="button" class="pc-x" aria-label="Close">×</button>
+  <span class="pc-n" id="pcN"></span>
+  <h3 id="pcTitle"></h3>
+  <p class="pc-fig" id="pcFig"></p>
+  <p id="pcText"></p>
+</div>
+
+<script type="module" src="/views/data-center/dc.js?v=19"></script>
+</body>
+</html>

@@ -532,7 +532,7 @@ var FacDeck = (function () {
             '<div class="fd-row">' + metric('1', '', 'corridor here') +
             metric('n', '', 'same loop everywhere') + '</div>' +
             '<p class="fd-note">One junction is a controller. A thousand of them reporting to the ' +
-            'same place is a model of how the city actually moves \u2014 and physical AI that acts ' +
+            'same place is a model of how the city actually moves \u2014 and a system that acts ' +
             'on it, in the street, in the same second it is measured.</p>');
         } }
     ]

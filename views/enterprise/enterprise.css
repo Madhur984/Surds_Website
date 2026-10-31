@@ -2,7 +2,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 .ent-back{display:inline-block;padding:12px 20px;font-size:13px;font-weight:600;color:#0439A4;text-decoration:none}
 .ent-back:hover{text-decoration:underline}
-#enterprise-content{font-family:'Nunito Sans', sans-serif;background:#fff;color:#1a1a2e}
+#enterprise-content{font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;background:#fff;color:#1a1a2e}
 #enterprise-content *{box-sizing:border-box}
 #enterprise-content::-webkit-scrollbar{width:5px}#enterprise-content::-webkit-scrollbar-track{background:#f5f5f5}#enterprise-content::-webkit-scrollbar-thumb{background:#0439A4;border-radius:3px}
 
@@ -13,9 +13,9 @@
 .ent-hero p{font-size:1.05rem;color:#64748B;line-height:1.7;max-width:480px;margin-bottom:32px}
 .ent-hero-visual{aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;position:relative}
 .ent-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#0439A4;background:rgba(0,56,168,.06);border:1px solid rgba(0,56,168,.12);margin-bottom:16px}
-.ent-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600;color:#fff;background:#0439A4;border:none;cursor:pointer;transition:all .2s ease;text-decoration:none;font-family:'Nunito Sans', sans-serif}
+.ent-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600;color:#fff;background:#0439A4;border:none;cursor:pointer;transition:all .2s ease;text-decoration:none;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
 .ent-btn:hover{background:#002d85;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,56,168,.2)}
-.ent-btn-outline{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600;color:#0439A4;background:transparent;border:1.5px solid rgba(0,56,168,.2);cursor:pointer;transition:all .2s ease;text-decoration:none;font-family:'Nunito Sans', sans-serif}
+.ent-btn-outline{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:8px;font-size:15px;font-weight:600;color:#0439A4;background:transparent;border:1.5px solid rgba(0,56,168,.2);cursor:pointer;transition:all .2s ease;text-decoration:none;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
 .ent-btn-outline:hover{background:rgba(0,56,168,.04);border-color:rgba(0,56,168,.35)}
 
 /* Feature tiles grid */
@@ -50,11 +50,11 @@
 .ent-feature-card ul{list-style:none;padding:0;margin:0}
 .ent-feature-card ul li{padding:8px 0;font-size:14px;color:#64748B;line-height:1.5;display:flex;gap:10px;align-items:flex-start}
 .ent-feature-card ul li::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:#0439A4;margin-top:7px;flex-shrink:0}
-.ent-fc-more{display:inline-flex;align-items:center;gap:6px;margin-top:20px;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;color:#0439A4;background:transparent;border:1.5px solid rgba(0,56,168,.2);cursor:pointer;transition:all .2s ease;font-family:'Nunito Sans', sans-serif}
+.ent-fc-more{display:inline-flex;align-items:center;gap:6px;margin-top:20px;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;color:#0439A4;background:transparent;border:1.5px solid rgba(0,56,168,.2);cursor:pointer;transition:all .2s ease;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
 .ent-fc-more:hover{background:rgba(0,56,168,.04);border-color:rgba(0,56,168,.35)}
 
 /* Industry solutions dialogs */
-.ent-dialog{position:fixed;inset:0;margin:auto;border:none;border-radius:16px;padding:36px;max-width:520px;max-height:calc(100vh - 80px);width:calc(100% - 48px);box-shadow:0 24px 60px rgba(0,0,0,.18);font-family:'Nunito Sans', sans-serif;color:#1a1a2e;overflow:auto}
+.ent-dialog{position:fixed;inset:0;margin:auto;border:none;border-radius:16px;padding:36px;max-width:520px;max-height:calc(100vh - 80px);width:calc(100% - 48px);box-shadow:0 24px 60px rgba(0,0,0,.18);font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;color:#1a1a2e;overflow:auto}
 .ent-dialog::backdrop{background:rgba(15,23,42,.55)}
 .ent-dialog h3{font-size:20px;font-weight:700;color:#0439A4;margin-bottom:20px}
 .ent-dialog ul{list-style:none;padding:0;margin:0}
@@ -66,7 +66,7 @@
 .ent-dialog-media video{display:block;width:100%;max-height:280px}
 .ent-dialog-lead{font-size:14px;color:#64748B;line-height:1.5;margin:-12px 0 20px}
 .ent-dialog-form{display:flex;flex-direction:column;gap:12px}
-.ent-dialog-form input,.ent-dialog-form textarea{width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid #E9ECEF;font-size:14px;font-family:'Nunito Sans', sans-serif;color:#1a1a2e;transition:border-color .2s ease}
+.ent-dialog-form input,.ent-dialog-form textarea{width:100%;padding:12px 14px;border-radius:8px;border:1.5px solid #E9ECEF;font-size:14px;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;color:#1a1a2e;transition:border-color .2s ease}
 .ent-dialog-form input:focus,.ent-dialog-form textarea:focus{outline:none;border-color:#0439A4}
 .ent-dialog-form textarea{resize:none}
 .ent-dialog-submit{justify-content:center;margin-top:4px}
@@ -133,16 +133,16 @@
 .ent-chart-axis{stroke:#E9ECEF;stroke-width:1}
 .ent-chart-line{fill:none;stroke:#16a34a;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
 .ent-chart-dot{fill:#16a34a;stroke:#fff;stroke-width:2}
-.ent-chart-label{font-size:11px;font-weight:600;fill:#1e293b;font-family:'Nunito Sans', sans-serif}
+.ent-chart-label{font-size:11px;font-weight:600;fill:#1e293b;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
 .ent-chart-label-end{fill:#16a34a}
-.ent-chart-badge{font-size:10px;font-weight:700;fill:#16a34a;font-family:'Nunito Sans', sans-serif}
-.ent-chart-month{font-size:10px;fill:#94a3b8;font-family:'Nunito Sans', sans-serif}
+.ent-chart-badge{font-size:10px;font-weight:700;fill:#16a34a;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
+.ent-chart-month{font-size:10px;fill:#94a3b8;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
 
 .ent-flow-line{fill:none;stroke:#cbd5e1;stroke-width:2;stroke-dasharray:5 5}
 .ent-flow-dot{fill:#0439A4}
 .ent-flow-node rect{fill:#F8FAFC;stroke:#0439A4;stroke-width:1.5}
 .ent-flow-icon{fill:none;stroke:#0439A4;stroke-width:2}
-.ent-flow-label{font-size:11px;font-weight:600;fill:#1e293b;text-anchor:middle;font-family:'Nunito Sans', sans-serif}
+.ent-flow-label{font-size:11px;font-weight:600;fill:#1e293b;text-anchor:middle;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif}
 
 /* Responsive */
 @media(max-width:1024px){

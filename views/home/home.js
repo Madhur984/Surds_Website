@@ -22,12 +22,16 @@
     const bar = document.getElementById("progress"), nav = document.getElementById("nav");
     const links = [...document.querySelectorAll(".nav-links a")];
     const secs = links.map(a=>document.querySelector(a.getAttribute("href")));
+    const nights = ["hero", "network"].map(id => document.getElementById(id)).filter(Boolean);
     let q = false;
     function upd(){
       q = false;
       const max = document.documentElement.scrollHeight - innerHeight;
       bar.style.transform = `scaleX(${max>0 ? scrollY/max : 0})`;
       nav.classList.toggle("scrolled", scrollY > 30);
+      // the hero and the network panel are always night: the nav goes dark while it sits over them
+      const nb = nav.offsetHeight / 2;
+      nav.classList.toggle("on-night", nights.some(s => { const r = s.getBoundingClientRect(); return r.top <= nb && r.bottom > nb; }));
       let on = -1;
       secs.forEach((s,i)=>{ if (s && s.getBoundingClientRect().top < innerHeight*0.4) on = i; });
       links.forEach((a,i)=>a.classList.toggle("active", i===on));
@@ -171,7 +175,7 @@
       const el = document.createElementNS(NS,"g"); el.setAttribute("class","probe-tag");
       el.innerHTML = `<circle cx="${p.x}" cy="${p.y}" r="7" stroke="#fff" stroke-width="2.5"/>
         <rect x="${p.x+13}" y="${p.y-15}" width="104" height="30" rx="4" fill="#141414"/>
-        <text x="${p.x+23}" y="${p.y+5}" font-family="Nunito Sans, sans-serif" font-size="14" fill="#fff"></text>`;
+        <text x="${p.x+23}" y="${p.y+5}" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="14" fill="#fff"></text>`;
       g.appendChild(el); p.dot = el.querySelector("circle"); p.txt = el.querySelector("text"); p.box = el.querySelector("rect");
     });
     let doorOpen = false, coolerOff = false, doorT = 0, offT = 0, alerted = {}, anyAlert = false, warnedDoor = false, warnedCooler = false;

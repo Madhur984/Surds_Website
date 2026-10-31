@@ -1,0 +1,178 @@
+{
+  "_note": "Camera views shared by /explore (three.js) and tools/explore_render.py (Blender). three.js coordinates: metres, Y up. Level i sits at y = i * 8.4. fov is vertical, degrees, for a 16:9 frame.",
+  "tower": {
+    "pos": [
+      46,
+      4,
+      64
+    ],
+    "look": [
+      14,
+      19,
+      0
+    ],
+    "fov": 40
+  },
+  "levels": [
+    {
+      "key": "plant",
+      "spots": [
+        {
+          "id": "main",
+          "title": "Level 0, the plant",
+          "pos": [
+            19.5,
+            2.2,
+            11.5
+          ],
+          "look": [
+            -8,
+            1.6,
+            -6
+          ],
+          "fov": 58
+        },
+        {
+          "id": "gens",
+          "title": "The generator hall",
+          "pos": [
+            -3.5,
+            2.0,
+            -2.5
+          ],
+          "look": [
+            -17,
+            1.6,
+            -9
+          ],
+          "fov": 58
+        }
+      ]
+    },
+    {
+      "key": "power",
+      "spots": [
+        {
+          "id": "main",
+          "title": "Level 1, power and operations",
+          "pos": [
+            21,
+            10.3,
+            3.5
+          ],
+          "look": [
+            4,
+            9.6,
+            -11
+          ],
+          "fov": 58
+        },
+        {
+          "id": "ups",
+          "title": "The UPS and battery room",
+          "pos": [
+            -2.5,
+            10.1,
+            1.5
+          ],
+          "look": [
+            -19,
+            9.4,
+            -7
+          ],
+          "fov": 58
+        }
+      ]
+    },
+    {
+      "key": "net",
+      "spots": [
+        {
+          "id": "main",
+          "title": "Level 2, network and AI",
+          "pos": [
+            19.5,
+            19.0,
+            11.5
+          ],
+          "look": [
+            -8,
+            18.2,
+            -5
+          ],
+          "fov": 58
+        },
+        {
+          "id": "gpu",
+          "title": "The AI pod",
+          "pos": [
+            1.6,
+            18.9,
+            -7.5
+          ],
+          "look": [
+            20,
+            18.4,
+            -7.5
+          ],
+          "fov": 58
+        }
+      ]
+    },
+    {
+      "key": "hall",
+      "spots": [
+        {
+          "id": "main",
+          "title": "Level 3, the data hall",
+          "pos": [
+            -20,
+            27.4,
+            12.2
+          ],
+          "look": [
+            8,
+            26.6,
+            -6
+          ],
+          "fov": 58
+        },
+        {
+          "id": "aisle",
+          "title": "Inside a cold aisle",
+          "pos": [
+            0.9,
+            27.3,
+            1.6
+          ],
+          "look": [
+            18,
+            26.9,
+            1.6
+          ],
+          "fov": 58
+        }
+      ]
+    },
+    {
+      "key": "roof",
+      "spots": [
+        {
+          "id": "main",
+          "title": "Level 4, the roof",
+          "pos": [
+            24,
+            44,
+            21
+          ],
+          "look": [
+            0,
+            34.4,
+            -2
+          ],
+          "fov": 50
+        }
+      ]
+    }
+  ]
+}

@@ -87,7 +87,7 @@ function textTexture(text, color, w = 512, h = 128, weight = 800) {
   const c = document.createElement("canvas"); c.width = w; c.height = h;
   const x = c.getContext("2d");
   x.fillStyle = color; x.textAlign = "center"; x.textBaseline = "middle";
-  x.font = `${weight} ${h * 0.62}px 'Nunito Sans', sans-serif`;
+  x.font = `${weight} ${h * 0.62}px Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`;
   x.letterSpacing = "12px";
   x.fillText(text, w / 2, h / 2);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;

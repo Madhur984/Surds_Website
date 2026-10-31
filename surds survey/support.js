@@ -100,19 +100,19 @@
     html.sc-dc-streaming .sc-placeholder:nth-child(n+9 of .sc-placeholder)::before,
     html.sc-dc-streaming .sc-interp.sc-missing:nth-child(n+9 of .sc-interp.sc-missing)::before{animation:none;
       background:color-mix(in srgb,currentColor 8%,transparent)}
-    .sc-placeholder-error{padding:4px 8px;font:11px/1.4 Nunito Sans;
+    .sc-placeholder-error{padding:4px 8px;font:11px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color:color-mix(in srgb,currentColor 70%,transparent);word-break:break-word}
     .sc-interp.sc-missing{display:inline-block;width:2em;height:1em;overflow:hidden;
       vertical-align:text-bottom;background:rgba(255,255,255,.3);border:1px solid rgba(0,0,0,.5);
       border-radius:2px;box-sizing:border-box;color:transparent;
       user-select:none}
-    .sc-interp.sc-unresolved{font-family:'Nunito Sans', sans-serif;font-size:.85em;
+    .sc-interp.sc-unresolved{font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;font-size:.85em;
       color:color-mix(in srgb,currentColor 50%,transparent);
       background:color-mix(in srgb,currentColor 10%,transparent);border-radius:3px;
       padding:0 3px}
     .sc-host.sc-has-error{position:relative}
     .sc-logic-error{position:absolute;top:8px;left:8px;z-index:2147483647;max-width:60ch;
-      padding:6px 10px;background:#b00020;color:#fff;font:12px/1.4 Nunito Sans;
+      padding:6px 10px;background:#b00020;color:#fff;font:12px/1.4 Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       border-radius:4px;white-space:pre-wrap;pointer-events:none}
     /* Mirrors PRINT_BASELINE_CSS in apps/web deck-stage-export.ts \u2014 keep both
        in sync until dc-runtime regains a build step. */

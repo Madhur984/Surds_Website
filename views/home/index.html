@@ -7,12 +7,10 @@
 <meta name="description" content="SURDS builds wireless sensing, an offline-first edge gateway and a live facility platform for spaces that can't afford to fail: cold storage, buildings and HVAC, data centers, clean rooms and more. Incubated at IIT Kharagpur.">
 <link rel="icon" href="/shared/favicon.svg">
 <link rel="stylesheet" href="/shared/fonts.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,300..800;1,6..12,300..800&display=swap">
-<link rel="preload" href="/shared/fonts/nunito-sans-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/views/home/home.css?v=1">
-<link rel="preload" href="/views/home/office-bg.webp" as="image">
+<link rel="preload" href="/shared/fonts/inter-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/shared/fonts/instrument-serif-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/views/home/home.css?v=25">
+<link rel="preload" href="/views/home/city-bg.webp?v=1" as="image">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
 </head>
 <body>
@@ -44,10 +42,15 @@
 <main id="top">
 <!-- ================= HERO ================= -->
 <section id="hero" aria-label="Introduction">
-  <div class="hero-art" aria-hidden="true"><img src="/views/home/office-bg.webp" alt="" width="1971" height="1256" fetchpriority="high"></div>
+  <div class="hero-art"><div class="city-stage" data-view="hero" data-map="bg"><div class="city-inner"><img src="/views/home/city-bg.webp?v=1" alt="" width="2880" height="1620" fetchpriority="high"></div>
+    <button type="button" class="net-tag" data-k="commercial">Commercial<br>buildings</button>
+    <button type="button" class="net-tag" data-k="dc">Data centers</button>
+    <button type="button" class="net-tag" data-k="clean">Clean rooms<br>&amp; pharma</button>
+    <button type="button" class="net-tag" data-k="energy">Energy &amp;<br>utilities</button>
+    <button type="button" class="net-tag" data-k="health">Healthcare<br>&amp; labs</button>
+  </div></div>
   <div class="hero-copy"><div class="wrap">
-    <p class="hero-meta"><span>SURDS Tech Solutions</span><span>Incubated at IIT Kharagpur</span></p>
-    <h1 class="hero-h">We engineer intelligence for the physical world.</h1>
+    <h1 class="hero-h">We engineer intelligence for the <em>physical world.</em></h1>
     <p class="hero-sub">Sensors, an on-site hub and a live dashboard for rooms that can't afford to fail.</p>
     <div class="hero-ctas">
       <a class="btn btn-ink" href="#contact">Book a pilot <span class="ar">→</span></a>
@@ -65,12 +68,40 @@
   </div>
 </section>
 
+<!-- ================= NETWORK: the connected physical world ================= -->
+<section id="network" aria-label="The connected physical world">
+  <div class="net-bg">
+    <figure class="net-fig city-stage" data-view="network" data-map="bg">
+      <img src="/views/home/city-bg.webp?v=1" alt="Night view of a district. Orange SURDS network lines along the streets link a glass office tower, a data center, a clean-room plant, a hospital and a power plant with its substation." width="2880" height="1620" loading="lazy" decoding="async">
+      <button type="button" class="net-tag" data-k="commercial">Commercial<br>buildings</button>
+      <button type="button" class="net-tag" data-k="dc">Data centers</button>
+      <button type="button" class="net-tag" data-k="clean">Clean rooms<br>&amp; pharma</button>
+      <button type="button" class="net-tag" data-k="energy">Energy &amp;<br>utilities</button>
+      <button type="button" class="net-tag" data-k="health">Healthcare<br>&amp; labs</button>
+    </figure>
+  </div>
+  <div class="net-grid">
+    <div class="net-side">
+      <h2 class="h2 rv">The connected physical world</h2>
+      <p class="lead rv d1">From buildings to data centers, factories to clean rooms. One intelligent layer for tomorrow's infrastructure.</p>
+      <div class="net-list rv d2" role="group" aria-label="Pick a site on the map">
+        <button type="button" class="net-pick on" data-k="" aria-pressed="true">Overview</button>
+        <button type="button" class="net-pick" data-k="commercial" aria-pressed="false">Buildings</button>
+        <button type="button" class="net-pick" data-k="dc" aria-pressed="false">Data centers</button>
+        <button type="button" class="net-pick" data-k="clean" aria-pressed="false">Clean rooms</button>
+        <button type="button" class="net-pick" data-k="energy" aria-pressed="false">Energy</button>
+        <button type="button" class="net-pick" data-k="health" aria-pressed="false">Healthcare</button>
+      </div>
+      <a class="net-more" href="/data-center">Look inside a data center <span>→</span></a>
+    </div>
+  </div>
+</section>
+
 <!-- ================= HARDWARE ================= -->
 <section id="hardware" aria-label="The hardware">
  <div id="hwWrap">
   <div id="hwSticky">
     <div class="hw-copy">
-      <span class="kicker"><em>01</em>The hardware</span>
       <h2 class="h2">Built by us. <span class="dim">Made for the room.</span></h2>
       <div class="hw-tabs" role="tablist">
         <button type="button" class="on" data-step="0" role="tab">Gateway</button>
@@ -121,7 +152,7 @@
 <section class="sec" id="how" aria-label="How it works">
   <div class="wrap">
     <div class="sec-head">
-      <div class="rv"><span class="kicker"><em>02</em>How it works</span><h2 class="h2">From sensor to your phone <span class="dim">in under a second.</span></h2></div>
+      <div class="rv"><h2 class="h2">From sensor to your phone <span class="dim">in under a second.</span></h2></div>
       <p class="lead rv d1">Cut the internet with the switch below. Nothing gets lost.</p>
     </div>
     <div class="pipe rv" id="pipe">
@@ -154,7 +185,7 @@
 <section class="sec" id="demo" aria-label="Live demo">
   <div class="wrap">
     <div class="sec-head">
-      <div class="rv"><span class="kicker"><em>03</em>Try it yourself</span><h2 class="h2">Keep the vaccines safe.</h2></div>
+      <div class="rv"><h2 class="h2">Keep the vaccines safe.</h2></div>
       <p class="lead rv d1">It must stay between 2 and 8 °C. Open the door or stop the cooler and see what happens.</p>
     </div>
     <div class="cold rv">
@@ -189,7 +220,7 @@
             <rect x="268" y="206" width="48" height="34" rx="2"/><rect x="324" y="212" width="58" height="28" rx="2"/><rect x="392" y="204" width="52" height="36" rx="2"/><rect x="452" y="210" width="56" height="30" rx="2"/>
             <rect x="262" y="298" width="62" height="32" rx="2"/><rect x="332" y="302" width="50" height="28" rx="2"/><rect x="392" y="296" width="58" height="34" rx="2"/><rect x="460" y="300" width="52" height="30" rx="2"/>
           </g>
-          <g font-family="Nunito Sans, sans-serif" font-size="10" fill="#6B7C8A" text-anchor="middle">
+          <g font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="10" fill="#6B7C8A" text-anchor="middle">
             <text x="292" y="138">VACCINE</text><text x="410" y="137">VACCINE</text><text x="355" y="229">VACCINE</text><text x="480" y="228">VACCINE</text><text x="293" y="318">VACCINE</text><text x="421" y="317">VACCINE</text>
           </g>
           <!-- cooler -->
@@ -197,7 +228,7 @@
             <rect x="600" y="52" width="140" height="78" rx="6" fill="#F4F7FA" stroke="#9FB0BE"/>
             <g id="fan" transform="translate(640 91)"><circle r="26" fill="#E3EAF0" stroke="#9FB0BE"/><g class="blades"><path d="M0 -22 C10 -12 6 -4 0 0 C-6 -4 -10 -12 0 -22 M22 0 C12 10 4 6 0 0 C4 -6 12 -10 22 0 M0 22 C-10 12 -6 4 0 0 C6 4 10 12 0 22 M-22 0 C-12 -10 -4 -6 0 0 C-4 6 -12 10 -22 0" fill="#8C9BA8"/></g></g>
             <circle id="coolerLed" cx="712" cy="72" r="5" fill="#10B981"/>
-            <text x="700" y="112" font-family="Nunito Sans, sans-serif" font-size="11" fill="#6B7C8A" text-anchor="middle">Cooler</text>
+            <text x="700" y="112" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="11" fill="#6B7C8A" text-anchor="middle">Cooler</text>
           </g>
           <g id="coldAir" stroke="#38BDF8" stroke-width="2" fill="none" stroke-dasharray="6 8" opacity=".8">
             <path d="M600 110 C540 140 520 170 470 180"/><path d="M620 132 C600 200 560 260 520 280"/>
@@ -227,7 +258,7 @@
  <div id="solWrap">
   <div id="solSticky">
     <div id="solSpot"></div>
-    <div class="sol-head"><span class="kicker"><em>04</em>Solutions</span><h2 class="h2">Where SURDS works</h2></div>
+    <div class="sol-head"><h2 class="h2">Where SURDS works</h2></div>
     <div id="ghosts"></div>
     <div id="slides"></div>
     <div class="ind-name"><div class="nm" id="indName"></div><div class="nx" id="indNext"></div></div>
@@ -241,7 +272,7 @@
 <section class="sec" id="privacy" aria-label="Privacy">
   <div class="wrap">
     <div class="sec-head">
-      <div class="rv"><span class="kicker"><em>05</em>No cameras</span><h2 class="h2">We count people. We never see faces.</h2></div>
+      <div class="rv"><h2 class="h2">We count people. We never see faces.</h2></div>
       <p class="lead rv d1">Body heat, not video. Empty rooms get their AC switched off. Drag to look around.</p>
     </div>
   </div>
@@ -270,7 +301,7 @@
 <section class="sec" id="company" aria-label="Company">
   <div class="wrap">
     <div class="sec-head">
-      <div class="rv"><span class="kicker"><em>06</em>Proven in the field</span><h2 class="h2">Your infrastructure is <span class="dim">already talking.</span></h2></div>
+      <div class="rv"><h2 class="h2">Your infrastructure is <span class="dim">already talking.</span></h2></div>
     </div>
     <div class="proofvis">
       <div class="pv rv">
@@ -310,7 +341,6 @@
   <div class="wrap">
     <div class="cta rv">
       <div>
-        <span class="kicker"><em>07</em>Start a pilot</span>
         <h2 class="h2">Bring intelligence <span class="dim">to your facility.</span></h2>
         <p class="lead">A small pilot on your site first. Then we scale.</p>
         <div class="cta-list">
@@ -358,7 +388,9 @@
   </div>
 </footer>
 
-<script src="/views/home/home.js?v=1"></script>
+<script src="/views/home/home.js?v=3"></script>
+<script src="/views/home/city-map.js?v=5"></script>
+<script src="/views/home/city.js?v=7"></script>
 <script type="module" src="/views/home/hardware.js?v=1"></script>
 </body>
 </html>

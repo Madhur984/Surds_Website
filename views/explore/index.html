@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SURDS | Explore the data center</title>
+<meta name="description" content="Choose a level of a SURDS-monitored data center and fly inside: the plant, power and operations, the network and AI floor, the data hall and the roof.">
+<link rel="icon" href="/shared/favicon.svg">
+<link rel="stylesheet" href="/shared/fonts.css">
+<link rel="preload" href="/views/explore/img/tower.webp" as="image">
+<link rel="stylesheet" href="/views/explore/explore.css?v=2">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+</head>
+<body class="at-tower">
+<canvas id="live" aria-hidden="true"></canvas>
+<img id="still" src="/views/explore/img/tower.webp" alt="A SURDS-monitored data center at dusk, its five levels lit from inside.">
+<svg id="floors" aria-hidden="true"></svg>
+<div id="tags"></div>
+<div id="cursorNum" aria-hidden="true"></div>
+
+<header class="bar">
+  <a class="back" href="/home" id="backBtn">← Back to the site</a>
+  <a class="cta" href="/home#contact">Book a pilot <span>→</span></a>
+</header>
+
+<aside class="panel" id="panel" aria-label="Choose a level">
+  <h1>Choose your level</h1>
+  <p class="lede">Point at a level and its rooms light up. Click it, or slide to a level and press Enter, and you go in through the glass.</p>
+  <div class="pick">
+    <span class="lvl-label">Level</span>
+    <span class="lvl-num" id="lvlNum">3</span>
+  </div>
+  <h2 id="lvlName">Data hall</h2>
+  <p id="lvlText">Hundreds of racks in sealed aisles.</p>
+  <dl class="facts" id="lvlFacts"></dl>
+  <div class="slider">
+    <span>0</span>
+    <input type="range" id="lvlRange" min="0" max="4" step="1" value="3" aria-label="Level">
+    <span>4</span>
+  </div>
+  <button type="button" class="enter" id="enterBtn">Enter <span>→</span></button>
+</aside>
+
+<section class="room" id="room" aria-live="polite">
+  <h2 id="roomTitle"></h2>
+  <p id="roomText"></p>
+</section>
+
+<div class="part-card" id="partCard" role="dialog" aria-labelledby="pcTitle" hidden>
+  <button type="button" class="pc-x" aria-label="Close">×</button>
+  <span class="pc-n" id="pcN"></span>
+  <h3 id="pcTitle"></h3>
+  <p class="pc-fig" id="pcFig"></p>
+  <p id="pcText"></p>
+</div>
+
+<div id="loading">Loading the building…</div>
+<script type="module" src="/views/explore/explore.js?v=4"></script>
+</body>
+</html>

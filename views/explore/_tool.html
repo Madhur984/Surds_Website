@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>explore tool</title>
+<style>html,body{margin:0;background:#000;overflow:hidden;} canvas{display:block;width:100vw;height:100vh;}</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<!-- Dev tool (not linked): ?view=tower | ?view=hall/main ... previews a camera view; ?export=1 builds a GLB of the
+     stacked building into window.__glb (base64) for tools/explore_render.py. -->
+<script type="module">
+import * as THREE from "three";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js";
+import { buildModel, H } from "/views/data-center/dc-model.js?v=2";
+const VIEWS = await (await fetch("/views/explore/views.json")).json();
+const q = new URLSearchParams(location.search);
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(innerWidth, innerHeight, false); renderer.toneMapping = THREE.ACESFilmicToneMapping;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x1a2a44);
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.5;
+scene.add(new THREE.HemisphereLight(0xe3e9f5, 0x202020, 1.6)); const sun = new THREE.DirectionalLight(0xffffff, 2); sun.position.set(30, 60, 20); scene.add(sun);
+const model = buildModel(renderer);
+const root = new THREE.Group(); root.name = "SURDS_DataCenter"; scene.add(root);
+model.floors.forEach(({ g }, i) => { g.position.set(0, i * H, 0); root.add(g); });
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 400).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x30343a, roughness: 0.9 }));
+ground.position.y = -0.52; scene.add(ground);
+if (q.get("export")) {
+  root.updateMatrixWorld(true);
+  const glb = await new GLTFExporter().parseAsync(root, { binary: true, maxTextureSize: 2048 });
+  const u8 = new Uint8Array(glb); let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  window.__glb = btoa(s); document.title = "exported";
+} else {
+  const v = q.get("view") || "tower";
+  let cam;
+  if (v === "tower") cam = VIEWS.tower;
+  else { const [lk, sid] = v.split("/"); cam = VIEWS.levels.find((l) => l.key === lk).spots.find((s) => s.id === sid); }
+  const camera = new THREE.PerspectiveCamera(cam.fov, innerWidth / innerHeight, 0.1, 3000);
+  camera.position.set(...cam.pos); camera.lookAt(new THREE.Vector3(...cam.look));
+  renderer.render(scene, camera); document.title = "rendered";
+}
+</script>
+</body>
+</html>

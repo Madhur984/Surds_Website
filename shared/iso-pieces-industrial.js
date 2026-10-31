@@ -185,7 +185,7 @@ sign:{name:'Sign',h:0,gen:function(a,b,rot,text){
   var c=[isoX(a+.5,b+.5),isoY(a+.5,b+.5,2.6)],t=(text||'BAY').toUpperCase(),w=Math.max(46,t.length*7.4+18);
   return'<g transform="translate('+c[0].toFixed(1)+','+c[1].toFixed(1)+')"><line x1="0" y1="-2" x2="0" y2="10" stroke="#909090" stroke-width="1" opacity="0.5"/>'+
     '<rect x="'+(-w/2).toFixed(1)+'" y="-13" width="'+w.toFixed(1)+'" height="22" rx="4" fill="#1a2a3a" opacity="0.94"/>'+
-    '<text x="0" y="2.5" text-anchor="middle" font-family="Nunito Sans, sans-serif" font-size="10" font-weight="bold" fill="#f0c020" letter-spacing="0.5">'+t+'</text></g>'}}
+    '<text x="0" y="2.5" text-anchor="middle" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="10" font-weight="bold" fill="#f0c020" letter-spacing="0.5">'+t+'</text></g>'}}
 };
 var ORDER_IND=['smelter','trough','roller','reeler','coil','furnace','rack','panel','weld','tank','fence','cwall','worker','sign'];
 var HOTKEY_IND={'1':'smelter','2':'trough','3':'roller','4':'reeler','5':'coil','6':'furnace','7':'rack','8':'panel','9':'worker','0':'sign'};

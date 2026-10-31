@@ -45,7 +45,7 @@
 .fp-bar-label{width:88px;flex-shrink:0;color:var(--m-text3)}
 .fp-bar-track{flex:1;height:6px;border-radius:3px;background:rgba(128,128,128,.2);overflow:hidden}
 .fp-bar-fill{height:100%;border-radius:3px}
-.fp-bar-val{width:28px;text-align:right;font-family:'Nunito Sans', sans-serif;font-weight:600;color:var(--m-text)}
+.fp-bar-val{width:28px;text-align:right;font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;font-weight:600;color:var(--m-text)}
 [data-facility="retail"] #retail-heatmap-panel{opacity:1;transform:translateY(0)}
 [data-facility="chemical"] #chemical-process-panel{opacity:1;transform:translateY(0)}
 @media(max-width:900px){.facility-panel{display:none}}

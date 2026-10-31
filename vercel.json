@@ -1,12 +1,45 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/views/home/index.html" },
-    { "source": "/classic", "destination": "/views/main/index.html" },
-    { "source": "/enterprise", "destination": "/views/enterprise/index.html" },
-    { "source": "/card-tour", "destination": "/views/card-tour/index.html" },
-    { "source": "/survey", "destination": "/survey.html" }
+    {
+      "source": "/",
+      "destination": "/views/render/index.html"
+    },
+    {
+      "source": "/home",
+      "destination": "/views/home/index.html"
+    },
+    {
+      "source": "/classic",
+      "destination": "/views/main/index.html"
+    },
+    {
+      "source": "/enterprise",
+      "destination": "/views/enterprise/index.html"
+    },
+    {
+      "source": "/card-tour",
+      "destination": "/views/card-tour/index.html"
+    },
+    {
+      "source": "/survey",
+      "destination": "/survey.html"
+    },
+    {
+      "source": "/data-center",
+      "destination": "/views/data-center/index.html"
+    },
+    {
+      "source": "/render",
+      "destination": "/views/render/index.html"
+    },
+    {
+      "source": "/explore",
+      "destination": "/views/explore/index.html"
+    }
   ],
   "functions": {
-    "api/surveys.js": { "includeFiles": "surds survey/**" }
+    "api/surveys.js": {
+      "includeFiles": "surds survey/**"
+    }
   }
 }

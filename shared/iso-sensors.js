@@ -48,7 +48,7 @@ function sensorsSVG(){
   s+='<circle cx="'+cx+'" cy="'+cy+'" r="4.5" fill="'+sen.color+'"/>';
   s+='<circle cx="'+cx+'" cy="'+cy+'" r="4.5" fill="none" stroke="'+sen.color+'" stroke-width="1.5"><animate attributeName="r" from="4.5" to="18" dur="2.2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.65" to="0" dur="2.2s" repeatCount="indefinite"/></circle>';
   s+='<circle cx="'+cx+'" cy="'+cy+'" r="4.5" fill="none" stroke="'+sen.color+'" stroke-width="1"><animate attributeName="r" from="4.5" to="13" dur="2.2s" begin="1.1s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="2.2s" begin="1.1s" repeatCount="indefinite"/></circle>';
-  s+='<text x="'+cx+'" y="'+(ceilY-6)+'" text-anchor="middle" font-family="Nunito Sans, sans-serif" font-size="7.5" font-weight="bold" fill="'+sen.color+'" opacity="0.9">'+sen.label+'</text>';
+  s+='<text x="'+cx+'" y="'+(ceilY-6)+'" text-anchor="middle" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="7.5" font-weight="bold" fill="'+sen.color+'" opacity="0.9">'+sen.label+'</text>';
   s+='</g>'}return s
 }
 
@@ -71,8 +71,8 @@ function processBadgesSVG(){
       s+='<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="14" fill="none" stroke="'+b.color+'" stroke-width="1.5" opacity="0.4"><animate attributeName="r" from="14" to="26" dur="2.2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.45" to="0" dur="2.2s" repeatCount="indefinite"/></circle>';
     }
     s+='<rect x="'+(cx-w/2).toFixed(1)+'" y="'+(cy-15).toFixed(1)+'" width="'+w+'" height="30" rx="7" fill="#0a1a2a" opacity="0.92" stroke="'+b.color+'" stroke-width="1.2"/>';
-    s+='<text x="'+cx.toFixed(1)+'" y="'+(cy-3).toFixed(1)+'" text-anchor="middle" font-family="Nunito Sans, sans-serif" font-size="7.5" font-weight="600" fill="#cbd5e1">'+b.label+'</text>';
-    s+='<text x="'+cx.toFixed(1)+'" y="'+(cy+9).toFixed(1)+'" text-anchor="middle" font-family="Nunito Sans, sans-serif" font-size="11" font-weight="bold" fill="'+b.color+'">'+b.duration+(b.bottleneck?' ⚠':'')+'</text>';
+    s+='<text x="'+cx.toFixed(1)+'" y="'+(cy-3).toFixed(1)+'" text-anchor="middle" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="7.5" font-weight="600" fill="#cbd5e1">'+b.label+'</text>';
+    s+='<text x="'+cx.toFixed(1)+'" y="'+(cy+9).toFixed(1)+'" text-anchor="middle" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="11" font-weight="bold" fill="'+b.color+'">'+b.duration+(b.bottleneck?' ⚠':'')+'</text>';
     s+='</g>'
   }
   return s

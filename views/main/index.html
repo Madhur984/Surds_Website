@@ -8,15 +8,14 @@
 <script>self.ModelViewerElement = Object.assign(self.ModelViewerElement || {}, {meshoptDecoderLocation:"https://cdn.jsdelivr.net/npm/meshoptimizer@0.22.0/meshopt_decoder.js"});</script>
 <script type="module" src="https://unpkg.com/@google/model-viewer@4/dist/model-viewer.min.js"></script>
 <link rel="preload" href="/models/isometric-office-web.glb" as="fetch" crossorigin>
-<link rel="preload" href="/shared/fonts/nunito-sans-normal-latin.woff2" as="font" type="font/woff2" crossorigin>
 <meta name="description" content="SURDS builds sensing, control and decision systems for environments that can't afford to fail. Buildings, data centers, clean rooms, drones and more. Incubated at IIT Kharagpur.">
 <link rel="stylesheet" href="/shared/fonts.css">
 <style>
   :root{
-    /* one typeface, everywhere: Nunito Sans */
-    --display:'Nunito Sans',sans-serif;
-    --body:'Nunito Sans',sans-serif;
-    --mono:'Nunito Sans',sans-serif;
+    /* type: Instrument Serif headlines, Inter text (shared/fonts.css) */
+    --display:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    --body:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    --mono:Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     --ease:cubic-bezier(0.22,0.8,0.24,1);
     --ease-io:cubic-bezier(0.6,0,0.2,1);
     --acc:#2F6BFF; --acc-rgb:47,107,255;
@@ -48,7 +47,7 @@
     transition:background-color 0.5s var(--ease),color 0.5s var(--ease);
   }
   h1,h2,h3,h4,.nav-logo,.fl,.ghost,#slots,.hero-statement,.ind-name .nm{font-family:var(--display);}
-  /* Nunito Sans reads best a notch heavier than the old grotesk weights */
+  /* weights tuned a notch heavier than the old grotesk */
   h2{font-weight:800 !important;letter-spacing:-0.03em !important;}
   h4{font-weight:700;}
   .eyebrow{font-weight:800;}
@@ -1500,10 +1499,10 @@
        <ellipse cx="152" cy="28" rx="34" ry="20" fill="url(#facHeatMed)"/>
        <ellipse cx="30" cy="28" rx="24" ry="17" fill="url(#facHeatLow)"/>
        <ellipse cx="182" cy="88" rx="22" ry="16" fill="url(#facHeatLow)"/>
-       <text x="70" y="91" text-anchor="middle" font-size="7" font-family="Nunito Sans, sans-serif" fill="#fff" opacity="0.9">CHECKOUT</text>
-       <text x="152" y="32" text-anchor="middle" font-size="7" font-family="Nunito Sans, sans-serif" fill="#fff" opacity="0.8">PRODUCE</text>
-       <text x="30" y="32" text-anchor="middle" font-size="6.5" font-family="Nunito Sans, sans-serif" fill="#fff" opacity="0.65">DAIRY</text>
-       <text x="182" y="91" text-anchor="middle" font-size="6.5" font-family="Nunito Sans, sans-serif" fill="#fff" opacity="0.65">ENTRANCE</text>
+       <text x="70" y="91" text-anchor="middle" font-size="7" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" fill="#fff" opacity="0.9">CHECKOUT</text>
+       <text x="152" y="32" text-anchor="middle" font-size="7" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" fill="#fff" opacity="0.8">PRODUCE</text>
+       <text x="30" y="32" text-anchor="middle" font-size="6.5" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" fill="#fff" opacity="0.65">DAIRY</text>
+       <text x="182" y="91" text-anchor="middle" font-size="6.5" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" fill="#fff" opacity="0.65">ENTRANCE</text>
      </svg>
      <div class="fp-legend"><span><i class="fp-dot" style="background:#ef4444"></i>High</span><span><i class="fp-dot" style="background:#f97316"></i>Med</span><span><i class="fp-dot" style="background:#eab308"></i>Low</span></div>
      <p class="fp-insight">68% of foot traffic concentrates near checkout during peak hours.</p>
@@ -2518,7 +2517,7 @@
       ctx.fillStyle = `rgba(${fgc},0.35)`;
       ctx.beginPath(); ctx.arc(rx,ry,3*dpr,0,7); ctx.fill();
       ctx.fillStyle = `rgba(${fgc},0.4)`;
-      ctx.font = `${8.5*dpr}px Nunito Sans`;
+      ctx.font = `${8.5*dpr}px Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`;
       ctx.fillText("RAW", rx+8*dpr, ry-6*dpr);
 
       /* surds trail + dot */
@@ -3125,7 +3124,7 @@
         var col = '#F59E0B';
         out += '<circle cx="'+nx+'" cy="'+ny+'" r="'+(r+4)+'" fill="none" stroke="'+col+'" stroke-opacity="0.3" />';
         out += '<circle cx="'+nx+'" cy="'+ny+'" r="'+r+'" fill="'+col+'" />';
-        out += '<text x="'+(nx+10)+'" y="'+(ny+4)+'" fill="#fbfbfd" font-family="Nunito Sans, sans-serif" font-size="9" opacity="0.85">'+n.label+'</text>';
+        out += '<text x="'+(nx+10)+'" y="'+(ny+4)+'" fill="#fbfbfd" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="9" opacity="0.85">'+n.label+'</text>';
       });
       svg.innerHTML = out;
       quarryMeshRaf = requestAnimationFrame(drawMesh);
@@ -3185,7 +3184,7 @@
         var col = isAlert ? '#EF4444' : '#34D399';
         out += '<circle cx="'+nx+'" cy="'+ny+'" r="'+(r+4)+'" fill="none" stroke="'+col+'" stroke-opacity="0.3" />';
         out += '<circle cx="'+nx+'" cy="'+ny+'" r="'+r+'" fill="'+col+'" />';
-        out += '<text x="'+(nx+10)+'" y="'+(ny+4)+'" fill="#fbfbfd" font-family="Nunito Sans, sans-serif" font-size="9" opacity="0.85">'+n.label+'</text>';
+        out += '<text x="'+(nx+10)+'" y="'+(ny+4)+'" fill="#fbfbfd" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="9" opacity="0.85">'+n.label+'</text>';
       });
       svg.innerHTML = out;
       poolMeshRaf = requestAnimationFrame(drawMesh);
@@ -3225,7 +3224,7 @@
         var col = '#F59E0B';
         out += '<circle cx="'+nx+'" cy="'+ny+'" r="'+(r+4)+'" fill="none" stroke="'+col+'" stroke-opacity="0.3" />';
         out += '<circle cx="'+nx+'" cy="'+ny+'" r="'+r+'" fill="'+col+'" />';
-        out += '<text x="'+(nx+10)+'" y="'+(ny+4)+'" fill="#fbfbfd" font-family="Nunito Sans, sans-serif" font-size="9" opacity="0.85">'+n.label+'</text>';
+        out += '<text x="'+(nx+10)+'" y="'+(ny+4)+'" fill="#fbfbfd" font-family=Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif" font-size="9" opacity="0.85">'+n.label+'</text>';
       });
       svg.innerHTML = out;
       livingroomMeshRaf = requestAnimationFrame(drawMesh);
