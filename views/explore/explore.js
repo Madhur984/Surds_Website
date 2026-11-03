@@ -1,301 +1,431 @@
-/* SURDS · Explore the data center.
-   Photoreal stills (tools/explore_render.py) sit on top of a live three.js copy of the same model
-   (views/data-center/dc-model.js), shot from the same cameras (views.json). Choosing a level fades the
-   still out, flies the live camera in through the facade, and fades the next still in on arrival. */
+/* SURDS · Explore the data center (real-time).
+   Everything is rendered live in three.js: the site's five-level model (views/data-center/dc-model.js) with real
+   equipment from NVIDIA SimReady (OpenUSD, Vertiv + Trane, CC-BY-4.0) converted to GLB by tools/simready_build.sh,
+   lit by a Poly Haven sky, with ambient occlusion, bloom and shadows.
+   Outside you orbit the building and pick a level; inside you walk it: drag to look, WASD / arrows / scroll to move,
+   or let the guided tour pan you past the equipment. */
 import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { buildModel, W, D, H, FLOORS, FIG } from "/views/data-center/dc-model.js?v=2";
-import { LEARN } from "/views/data-center/dc-learn.js?v=1";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { GTAOPass } from "three/addons/postprocessing/GTAOPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { buildModel, W, D, H, RF, FLOORS, FIG } from "/views/data-center/dc-model.js?v=8";
+import { LEARN, LEVEL_SIMPLE } from "/views/data-center/dc-learn.js?v=1";
+import { loadPeople, makePerson } from "/views/explore/people.js?v=2";
 
-const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const V3 = THREE.Vector3;
 const $ = (id) => document.getElementById(id);
-const VIEWS = await (await fetch("/views/explore/views.json?v=2")).json();
-const IMG = (name) => `/views/explore/img/${name}.webp?v=1`;
-
-// copy for each level (same story as /data-center)
+const V3 = THREE.Vector3;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const small = matchMedia("(max-width: 800px)").matches;
+const KEYS = ["plant", "power", "net", "hall", "roof"];
 const LEVEL = {
-  plant: { name: "Plant", text: "Diesel generators, fuel, chillers and pumps: everything the racks upstairs depend on.", facts: [["Generators", "4 × 2.5 MW"], ["Fuel", "~48 h"], ["Chillers", "3"]] },
-  power: { name: "Power and operations", text: "Switchgear, UPS and batteries hold the load until the generators take over. The control room watches all of it.", facts: [["Systems", "A + B"], ["Battery", "~10 min"], ["Staffed", "24/7"]] },
-  net:   { name: "Network and AI", text: "Carriers hand over their fibre in the meet-me room. Next door, liquid-cooled GPU racks train AI.", facts: [["Carriers", "4"], ["GPU racks", "40"], ["Per rack", "40–100 kW"]] },
-  hall:  { name: "Data hall", text: "Hundreds of racks in sealed aisles, fed cold air from under the floor and power and fibre from above.", facts: [["Racks", "448"], ["Per rack", "5–15 kW"], ["Air in", "18–27 °C"]] },
-  roof:  { name: "Roof", text: "Every watt a server uses ends up as heat. The roof throws it into the outside air.", facts: [["Cooling units", "6"], ["Fans", "48"], ["Heat out", "~5 MW"]] },
+  plant: { name: "Plant", title: "Level 0, the plant", facts: [["Generators", "4 × 2.5 MW"], ["Fuel", "~48 h"], ["Chillers", "3"]] },
+  power: { name: "Power and operations", title: "Level 1, power and operations", facts: [["Systems", "A + B"], ["Battery", "~10 min"], ["Staffed", "24/7"]] },
+  net:   { name: "Network and AI", title: "Level 2, network and AI", facts: [["Carriers", "4"], ["GPU racks", "40"], ["Per rack", "40–100 kW"]] },
+  hall:  { name: "Data hall", title: "Level 3, the data hall", facts: [["Racks", "448"], ["Per rack", "5–15 kW"], ["Air in", "18–27 °C"]] },
+  roof:  { name: "Roof", title: "Level 4, the roof", facts: [["Cooling units", "6"], ["Fans", "72"], ["Heat out", "~5 MW"]] },
 };
-const SPOT_TEXT = {
-  "plant-main": "Generators, fuel, chillers and pumps. Point at any machine to see what it does.",
-  "plant-gens": "Four diesel generators. If the grid fails, they start and carry the whole building in about ten seconds.",
-  "power-main": "The control room watches every level, around the clock. The power rooms sit behind the glass.",
-  "power-ups": "Two separate UPS and battery systems, A and B. Either one can carry every rack on its own.",
-  "net-main": "Immersion tanks, GPU racks and the network core. This is where the internet enters the building.",
-  "net-gpu": "Liquid-cooled GPU racks. Water-cooled doors take the heat straight out of the exhaust air.",
-  "hall-main": "Rows of server racks in sealed cold aisles, fed cold air from under the floor.",
-  "hall-aisle": "Racks face each other across the sealed aisle, so cold air only reaches the servers' intakes.",
-  "roof-main": "Six cooling units in white steel frames push the building's heat into the night air.",
+// guided tour per level: [x, z, lookX, lookZ, line shown while there] in level-local metres
+const TOUR = {
+  plant: [[19.5, 11.5, -6, -5, "The plant: generators, chillers, pumps and fuel."], [2, 0.5, 10, -9, "Water chillers make the building's cold water."],
+          [-3, -2, -15, -8, "Four diesel generators start within seconds of a power cut."], [-6, 3.5, -14, 5, "Bulk fuel: about 48 hours of running on its own."],
+          [-7, 7.5, -17, 11, "Transformers step the grid voltage down."], [9, 9, 19.5, 4, "Thermal storage keeps cooling going if a chiller trips."]],
+  power: [[21, 4, 6, -11, "Level 1: power rooms and the control room."], [13, 1.8, 11.5, -13, "The control room watches every level, around the clock."],
+          [-4, 5.5, -16, 5, "Behind the glass: switchgear, UPS and batteries."], [-8, 1.2, -15, -8.2, "UPS system A carries the load while generators start."],
+          [-8, -5.5, -14, -12.4, "Switchboards pick grid or generator power automatically."], [-8, 6.6, -15, 4.2, "UPS system B: a full second copy, so one can fail."]],
+  net:   [[19.5, 11.5, -6, -5, "Level 2: the internet comes in here, and AI runs here."], [12, 3.0, 9, 6.2, "Immersion tanks: servers cooled in liquid."],
+          [1.0, 3.0, 1.0, -9, "Round the corner: the AI pod."], [1.0, -7.5, 20, -7.5, "Between the GPU rows. Each rack uses as much power as 30 homes."],
+          [1.2, -11.4, 16, -12.4, "Coolant units keep the AI racks' water loop right."], [-11, 0.5, -16, -7, "The meet-me room: carriers hand over their fibre."]],
+  hall:  [[19.5, 11.2, 0, -4, "Level 3: the data hall. 448 racks, never switched off."], [0.9, 11.2, 0.9, -12, "The main aisle runs between two blocks of racks."],
+          [0.9, -11.4, -10, -12.6, "Air handlers cool the hall air and push it under the floor."], [3, 1.6, 18, 1.6, "Inside a sealed cold aisle: cold air in front of every server."],
+          [16, 1.6, 3, 1.6, "Inlet sensors at the top, middle and bottom of the racks."], [0.9, 4.2, 18, 4.2, "The hot aisle behind the racks."]],
+  roof:  [[19, 13, 0, -4, "The roof: where all the heat leaves the building."], [18, 0, -19, 0, "Six cooling plants inside white steel frames."],
+          [2.5, 0.2, 0, -7, "Liebert condensers push the heat into the outside air."], [-19, 0, 19, 0, "Pipes link the roof to every floor below."]],
 };
-const KEYS = VIEWS.levels.map((l) => l.key);
+const floorY = (i) => i * H + (KEYS[i] === "net" || KEYS[i] === "hall" ? RF : 0);
+const EYE = 1.65;
 
-// ============================================================ live scene
+// ============================================================ renderer, scene, post
 const canvas = $("live");
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
+renderer.setPixelRatio(Math.min(devicePixelRatio, small ? 1.25 : 1.5));
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
-{ // dusk sky to match the renders
-  const c = document.createElement("canvas"); c.width = 4; c.height = 256; const x = c.getContext("2d");
-  const g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, "#3c6fb0"); g.addColorStop(0.55, "#8fb1d8"); g.addColorStop(0.78, "#f0c8a0"); g.addColorStop(1, "#5a5650");
-  x.fillStyle = g; x.fillRect(0, 0, 4, 256); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; scene.background = t;
+const camera = new THREE.PerspectiveCamera(42, 16 / 9, 0.05, 4000);
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const gtao = new GTAOPass(scene, camera, 1, 1);
+gtao.updateGtaoMaterial({ radius: 0.9, distanceExponent: 1.2, thickness: 1.2, scale: 1.1, samples: small ? 8 : 16 });
+gtao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
+gtao.blendIntensity = 0.95;
+if (!small) composer.addPass(gtao);
+const bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.32, 0.55, 0.92); composer.addPass(bloom);
+const smaa = new SMAAPass(1, 1); composer.addPass(smaa);
+composer.addPass(new OutputPass());
+
+// light rig: low golden sun outside, soft cool fill everywhere, per-level shadow light inside
+const hemi = new THREE.HemisphereLight(0xdfe9f8, 0x4a453e, 0.7); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffc896, 3.2);
+sun.castShadow = true; sun.shadow.mapSize.set(small ? 1024 : 2048, small ? 1024 : 2048); sun.shadow.bias = -0.0003; sun.shadow.normalBias = 0.04;
+scene.add(sun, sun.target);
+
+// environments: the sky outside, a bright neutral studio-like room inside
+const pmrem = new THREE.PMREMGenerator(renderer);
+const roomEnv = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+let skyEnv = null, skyBg = null;
+
+// ground and plaza
+function paving() {
+  const c = document.createElement("canvas"); c.width = c.height = 512; const x = c.getContext("2d");
+  x.fillStyle = "#8a847a"; x.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { const v = 128 + Math.floor(Math.random() * 18); x.fillStyle = `rgb(${v + 6},${v},${v - 8})`; x.fillRect(i * 64 + 1, j * 64 + 1, 62, 62); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(700, 700); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
 }
-scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.45;
-scene.add(new THREE.HemisphereLight(0xdfe9f8, 0x5a5348, 1.7));
-const key = new THREE.DirectionalLight(0xffc896, 2.2); key.position.set(-35, 9, 90); scene.add(key);   // low golden sun, as in the renders
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(1200, 1200).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0x6f675c, roughness: 0.6, metalness: 0.0 }));
-ground.position.y = -0.53; scene.add(ground);
-const camera = new THREE.PerspectiveCamera(40, 16 / 9, 0.05, 3000);
-let model = null;
-function buildLive() {
-  model = buildModel(renderer);
-  model.floors.forEach(({ g }, i) => { g.position.set(0, i * H, 0); scene.add(g); });
-  // match the photoreal stills: champagne-bronze facade, brighter lit rooms
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(2800, 2800).rotateX(-Math.PI / 2), new THREE.MeshStandardMaterial({ map: paving(), roughness: 0.75 }));
+ground.position.y = -0.52; ground.receiveShadow = true; scene.add(ground);
+
+// ============================================================ the building
+let model = null, levelBoxes = [], highlight = [];
+function buildBuilding() {
+  model = buildModel(renderer, { real: ["chillers", "switchgear", "ups", "pdu", "cdu", "crah", "roofplant", "people"] });
+  model.floors.forEach(({ g }, i) => {
+    g.position.set(0, i * H, 0); scene.add(g);
+    g.traverse((o) => { if (o.isMesh) { o.castShadow = !o.material.transparent; o.receiveShadow = true; } });
+    // hover target + glow for choosing a level from outside
+    const hb = new THREE.Mesh(new THREE.BoxGeometry(W + 0.8, i === 4 ? 5.4 : H, D + 0.8), new THREE.MeshBasicMaterial({ color: 0xffc27a, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    hb.position.set(0, i * H + (i === 4 ? 2.7 : H / 2), 0); hb.userData.level = i; scene.add(hb); levelBoxes.push(hb); highlight.push(0);
+  });
   scene.traverse((o) => { const m = o.material; if (!m || Array.isArray(m)) return;
-    if (m.name === "pier") { m.color.set(0x8f8474); m.metalness = 0.55; m.roughness = 0.35; }
-    if (m.name === "window") m.emissiveIntensity = 1.6; });
+    if (m.name === "pier") { m.color.set(0x8f8474); m.metalness = 0.6; m.roughness = 0.32; }
+    if (m.name === "window") m.emissiveIntensity = 1.4;
+    if (m.name === "white") { m.color.set(0xb9bcc0); m.roughness = 0.5; }
+  });
 }
 
-// ============================================================ camera state, with object-fit: cover framing
-let vw = innerWidth, vh = innerHeight;
-const cam = { pos: new V3(), look: new V3(), fov: 40 };
-function setCam(s) { cam.pos.copy(s.pos); cam.look.copy(s.look); cam.fov = s.fov; }
-function applyCam() {
-  const a = vw / vh, base = 16 / 9;
-  camera.aspect = a;
-  camera.fov = a > base ? THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2) * base / a)) : cam.fov;
-  camera.position.copy(cam.pos); camera.lookAt(cam.look); camera.updateProjectionMatrix(); camera.updateMatrixWorld();
-}
-const view = (v) => ({ pos: new V3(...v.pos), look: new V3(...v.look), fov: v.fov });
-const TOWER = view(VIEWS.tower);
-const spotOf = (k, id) => VIEWS.levels.find((l) => l.key === k).spots.find((s) => s.id === id);
-function project(p) {
-  const w = p.clone().project(camera);
-  return { x: (w.x * 0.5 + 0.5) * vw, y: (-w.y * 0.5 + 0.5) * vh, ok: w.z < 1 && w.z > -1 };
+// ============================================================ real equipment (NVIDIA SimReady, Vertiv + Trane)
+// rot turns the unit so its front faces into the room
+const SIMREADY = [
+  { a: "chiller_water", lv: 0, rot: 0, at: [[4.5, -9.4], [10.5, -9.4], [16.5, -9.4]] },
+  { a: "switchboard", lv: 1, rot: 0, at: Array.from({ length: 13 }, (_, i) => [-20.5 + i * 1.04, -13.15]) },
+  { a: "ups_apm2", lv: 1, rot: -Math.PI / 2, at: [-19.6, -17.1, -14.6, -12.1].map((x) => [x, -8.2]).concat([-19.6, -17.1, -14.6, -12.1].map((x) => [x, 4.2])) },
+  { a: "rpp", lv: 1, rot: -Math.PI / 2, at: [[-10.6, -3.6], [-9.0, -3.6], [-10.6, 8.4], [-9.0, 8.4]] },
+  { a: "cdu", lv: 2, y: RF, rot: -Math.PI / 2, at: [[4.5, -12.85], [8.5, -12.85], [14.5, -12.85], [18.5, -12.85]] },
+  { a: "crah", lv: 3, rot: -Math.PI / 2, at: Array.from({ length: 8 }, (_, i) => [-17.5 + i * 5, -12.85]) },
+  { a: "condenser", lv: 4, rot: 0, at: [[-W / 3, -D / 4], [0, -D / 4], [W / 3, -D / 4], [-W / 3, D / 4], [0, D / 4], [W / 3, D / 4]] },
+  { a: "rack_ocp", lv: 2, y: RF, rot: Math.PI / 2, at: Array.from({ length: 6 }, (_, i) => [-5.6 + i * 0.6, 7.0]) },
+];
+const gl = new GLTFLoader(); gl.setMeshoptDecoder(MeshoptDecoder);
+const loaded = {};
+async function loadEquipment(progress) {
+  let done = 0;
+  await Promise.all(SIMREADY.map(async (s) => {
+    try {
+      const g = loaded[s.a] || (loaded[s.a] = await gl.loadAsync(`/views/explore/assets/${s.a}.glb?v=1`));
+      g.scene.updateMatrixWorld(true);
+      const parts = []; g.scene.traverse((o) => { if (o.isMesh) parts.push(o); });
+      const place = new THREE.Matrix4(), q = new THREE.Quaternion().setFromAxisAngle(new V3(0, 1, 0), s.rot);
+      for (const p of parts) {
+        const im = new THREE.InstancedMesh(p.geometry, p.material, s.at.length);
+        s.at.forEach(([x, z], k) => { place.compose(new V3(x, (s.y || 0) + s.lv * H, z), q, new V3(1, 1, 1)); im.setMatrixAt(k, place.clone().multiply(p.matrixWorld)); });
+        im.castShadow = im.receiveShadow = true; im.userData.level = s.lv;
+        scene.add(im);
+      }
+    } catch (e) { console.warn("equipment", s.a, e); }
+    progress(++done / SIMREADY.length);
+  }));
 }
 
-// ============================================================ stills
-const still = $("still");
-const cache = {};
-function preload(name) {
-  if (!cache[name]) { const im = new Image(); im.src = IMG(name); cache[name] = im.decode().catch(() => {}); }
-  return cache[name];
+// ============================================================ people
+// posed figures (tools/people_build.py) where the model puts people, plus a few more so every level is staffed
+const EXTRA_PEOPLE = [
+  { lv: 0, x: 7.5, z: -5.2, pose: "kneel", yaw: Math.PI, vest: true, hat: true },
+  { lv: 1, x: 18.5, z: -3.2, pose: "walk", yaw: -Math.PI / 2 },
+  { lv: 2, x: -13.4, z: -1.3, pose: "tablet", yaw: Math.PI },
+  { lv: 3, x: -0.8, z: -3.6, pose: "tablet", yaw: -Math.PI / 2, vest: true },
+  { lv: 4, x: -7.5, z: 0.4, pose: "tablet", yaw: Math.PI / 2, vest: true, hat: true },
+];
+async function placePeople() {
+  await loadPeople(gl, "/views/explore/assets/people.glb?v=4");
+  const all = model.PEOPLE.map((p) => ({ ...p, lv: model.floors.findIndex((f) => f.g === p.g) }))
+    .concat(EXTRA_PEOPLE.map((p) => ({ ...p, y: KEYS[p.lv] === "net" || KEYS[p.lv] === "hall" ? RF : 0 })));
+  all.forEach((p, i) => {
+    const pose = p.pose || (p.sitting ? "sit" : "stand");
+    const fig = makePerson({ pose, seed: i * 3 + 1, vest: !!p.vest, hat: !!p.hat, sleeves: p.vest ? "long" : undefined });
+    fig.position.set(p.x, (p.y || 0) + (pose === "sit" ? 0.04 : 0), p.z);
+    fig.rotation.y = p.yaw ?? Math.atan2(-p.x, -p.z);     // default: face into the room
+    model.floors[p.lv].g.add(fig);
+  });
 }
-const wait = (ms) => new Promise((r) => setTimeout(r, reduce ? 0 : ms));
-let liveOn = false;
-async function toLive() { liveOn = true; applyCam(); renderer.render(scene, camera); still.classList.add("out"); await wait(560); }
-async function toStill(name) {
-  await preload(name); still.src = IMG(name);
-  try { await still.decode(); } catch (e) { /* shown when ready */ }
-  still.classList.remove("out"); await wait(600); liveOn = false;
+
+// ============================================================ camera rigs
+const orbit = { az: 0.72, el: 0.2, r: 88, tAz: 0.72, tEl: 0.2, tR: 88, target: new V3(4, 14, 0) };
+const walk = { pos: new V3(), yaw: 0, pitch: 0, level: 0 };
+let mode = "outside", busy = false;
+function orbitPose() {
+  const ce = Math.cos(orbit.el);
+  return { pos: new V3(orbit.target.x + orbit.r * ce * Math.sin(orbit.az), orbit.target.y + orbit.r * Math.sin(orbit.el), orbit.target.z + orbit.r * ce * Math.cos(orbit.az)), look: orbit.target.clone() };
 }
+function walkLook() { return walk.pos.clone().add(new V3(Math.sin(walk.yaw) * Math.cos(walk.pitch), Math.sin(walk.pitch), -Math.cos(walk.yaw) * Math.cos(walk.pitch))); }
+function setWalkLook(look) { const d = look.clone().sub(walk.pos); walk.yaw = Math.atan2(d.x, -d.z); walk.pitch = Math.atan2(d.y, Math.hypot(d.x, d.z)); }
+// the roof is walked from a service gantry above the condenser frames, so pipes and frames never cut the view
+const eyeOf = (i) => (KEYS[i] === "roof" ? 5.6 : EYE);
+const lvlPoint = (i, x, z, up = eyeOf(i)) => new V3(x, floorY(i) + up, z);
+
+// which levels draw: outside all; inside only the level and the one above (its slab is our ceiling)
+function showLevels(i) {
+  model.floors.forEach(({ g }, k) => { g.visible = i < 0 || k === i || k === i + 1; });
+  scene.traverse((o) => { if (o.isInstancedMesh && o.userData.level !== undefined) o.visible = i < 0 || o.userData.level === i || o.userData.level === i + 1; });
+  levelBoxes.forEach((b) => (b.visible = i < 0));
+  ground.visible = i < 0 || i === 4;
+}
+function setLook(inside, i) {
+  if (inside && KEYS[i] !== "roof") {
+    scene.environment = roomEnv; scene.environmentIntensity = 0.55; scene.background = new THREE.Color(0x11141a); scene.backgroundIntensity = 1;
+    hemi.intensity = 0.55; sun.intensity = 1.6; sun.color.set(0xfff4e8);
+    const c = new V3(0, floorY(i), 0); sun.position.copy(c).add(new V3(8, 7.2, 5)); sun.target.position.copy(c);   // a soft key from the ceiling for contact shadows
+    Object.assign(sun.shadow.camera, { left: -25, right: 25, top: 18, bottom: -18, near: 0.5, far: 30 }); sun.shadow.camera.updateProjectionMatrix();
+    renderer.toneMappingExposure = 1.05; bloom.strength = 0.42; gtao.updateGtaoMaterial({ radius: 0.6 });
+  } else {
+    scene.environment = skyEnv; scene.environmentIntensity = 0.85; scene.background = skyBg; scene.backgroundIntensity = 0.4; scene.backgroundRotation.y = 1.2; scene.environmentRotation.y = 1.2;
+    hemi.intensity = 0.35; sun.intensity = 3.2; sun.color.set(0xffc896);
+    sun.position.set(-70, 26, 60); sun.target.position.set(0, 12, 0);
+    Object.assign(sun.shadow.camera, { left: -45, right: 45, top: 45, bottom: -10, near: 1, far: 220 }); sun.shadow.camera.updateProjectionMatrix();
+    const roof = inside && KEYS[i] === "roof";
+    renderer.toneMappingExposure = roof ? 0.62 : 0.88; bloom.strength = roof ? 0.12 : 0.3; sun.intensity = roof ? 2.2 : 3.2;
+    gtao.updateGtaoMaterial({ radius: roof ? 0.8 : 2.2 });
+  }
+}
+
+// ============================================================ input
+let drag = null, keys = {};
+canvas.addEventListener("pointerdown", (e) => { drag = { x: e.clientX, y: e.clientY, moved: 0 }; canvas.setPointerCapture(e.pointerId); canvas.classList.add("drag"); tourPause(); });
+canvas.addEventListener("pointermove", (e) => {
+  if (!drag) { if (mode === "outside") hoverAt(e.clientX, e.clientY); return; }
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy);
+  if (mode === "outside") { orbit.tAz -= dx * 0.005; orbit.tEl = THREE.MathUtils.clamp(orbit.tEl + dy * 0.003, 0.02, 0.9); }
+  else if (mode === "inside") { walk.yaw += dx * 0.0035; walk.pitch = THREE.MathUtils.clamp(walk.pitch - dy * 0.003, -1.1, 1.1); }
+});
+canvas.addEventListener("pointerup", (e) => {
+  canvas.classList.remove("drag");
+  if (drag && drag.moved < 6 && mode === "outside") { const i = levelAt(e.clientX, e.clientY); if (i >= 0) enter(i); }
+  drag = null;
+});
+canvas.addEventListener("wheel", (e) => {
+  e.preventDefault(); tourPause();
+  if (mode === "outside") orbit.tR = THREE.MathUtils.clamp(orbit.tR * (1 + e.deltaY * 0.001), 45, 160);
+  else if (mode === "inside") stepWalk(-Math.sign(e.deltaY) * 1.2, 0);
+}, { passive: false });
+addEventListener("keydown", (e) => {
+  if (e.target.closest("input,textarea")) return;
+  keys[e.key.toLowerCase()] = true;
+  if (mode === "inside" && ["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(e.key.toLowerCase())) { tourPause(); e.preventDefault(); }
+  if (mode === "inside" && e.key === " ") { e.preventDefault(); tour.on ? tourPause() : tourPlay(); }
+  if (e.key === "Escape") { if (!$("partCard").hidden) closeCard(); else if (mode === "inside") back(); }
+  if (mode === "outside" && !busy) {
+    if (e.key === "Enter" && !e.target.closest("a,button")) enter(sel);
+    if (e.key === "ArrowUp" || e.key === "ArrowRight") select(Math.min(4, sel + 1));
+    if (e.key === "ArrowDown" || e.key === "ArrowLeft") select(Math.max(0, sel - 1));
+  }
+});
+addEventListener("keyup", (e) => { keys[e.key.toLowerCase()] = false; });
+function stepWalk(fwd, side) {
+  const f = new V3(Math.sin(walk.yaw), 0, -Math.cos(walk.yaw)), r = new V3(Math.cos(walk.yaw), 0, Math.sin(walk.yaw));
+  walk.pos.addScaledVector(f, fwd).addScaledVector(r, side); clampWalk();
+}
+function clampWalk() {
+  const i = walk.level, m = KEYS[i] === "roof" ? 1.2 : 1.0;
+  walk.pos.x = THREE.MathUtils.clamp(walk.pos.x, -W / 2 + m, W / 2 - m); walk.pos.z = THREE.MathUtils.clamp(walk.pos.z, -D / 2 + m, D / 2 - m);
+  walk.pos.y = floorY(i) + eyeOf(i);
+}
+// touch: one finger looks, the on-screen pad walks
+document.querySelectorAll("[data-pad]").forEach((b) => {
+  let t = null; const go = () => { const [f, s] = b.dataset.pad.split(",").map(Number); stepWalk(f * 0.12, s * 0.12); };
+  b.addEventListener("pointerdown", (e) => { e.preventDefault(); tourPause(); go(); t = setInterval(go, 16); });
+  ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => b.addEventListener(ev, () => clearInterval(t)));
+});
+
+// ============================================================ choose a level (outside)
+let sel = 3;
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+function levelAt(x, y) {
+  ndc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1); ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(levelBoxes, false)[0]; return hit ? hit.object.userData.level : -1;
+}
+const cursorNum = $("cursorNum");
+function hoverAt(x, y) {
+  const i = levelAt(x, y);
+  cursorNum.classList.toggle("show", i >= 0 && !busy); canvas.style.cursor = i >= 0 ? "pointer" : "";
+  if (i >= 0) { cursorNum.textContent = i; cursorNum.style.transform = `translate(${x + 18}px,${y - 34}px)`; if (i !== sel) select(i); }
+}
+function select(i) {
+  sel = i; const L = LEVEL[KEYS[i]];
+  $("lvlNum").textContent = i; $("lvlName").textContent = L.name; $("lvlText").textContent = LEVEL_SIMPLE[KEYS[i]];
+  $("lvlFacts").innerHTML = L.facts.map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join("");
+  $("lvlRange").value = i;
+}
+$("lvlRange").addEventListener("input", (e) => select(+e.target.value));
+$("enterBtn").addEventListener("click", () => enter(sel));
 
 // ============================================================ flights
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const bez = (a, b, c, d, t) => { const u = 1 - t; return a.clone().multiplyScalar(u * u * u).add(b.clone().multiplyScalar(3 * u * u * t)).add(c.clone().multiplyScalar(3 * u * t * t)).add(d.clone().multiplyScalar(t * t * t)); };
-let hidden = [];
-function hideWall(i, n) { for (const w of model.floors[i].walls) if (w.n[0] === n[0] && w.n[1] === n[1]) for (const m of w.meshes) { m.visible = false; hidden.push(m); } }
-function showWalls() { for (const m of hidden) m.visible = true; hidden = []; }
-function entryFor(level, to) {   // the wall nearest the target spot, among those facing the tower camera
-  const walls = [[1, 0, W / 2 - to.pos.x], [-1, 0, to.pos.x + W / 2], [0, 1, D / 2 - to.pos.z], [0, -1, to.pos.z + D / 2]]
-    .filter(([nx, nz]) => nx * (TOWER.pos.x) + nz * (TOWER.pos.z) > 0);
-  const [nx, nz] = walls.sort((a, b) => a[2] - b[2])[0];
-  const out = to.pos.clone(); if (nx) out.x = nx * (W / 2 + 14); else out.z = nz * (D / 2 + 14);
-  return { n: [nx, nz], out };
+let flight = null;   // {t0, ms, at(t)->{pos,look}, done}
+function fly(ms, at) { return new Promise((done) => { flight = { t0: performance.now(), ms: reduce ? 1 : ms, at, done }; }); }
+let hiddenWall = [];
+function hideFacing(i, from) {   // the facade wall the camera passes through
+  const nx = Math.abs(from.x) / W > Math.abs(from.z) / D ? Math.sign(from.x) : 0, nz = nx ? 0 : Math.sign(from.z);
+  for (const w of model.floors[i].walls) if (w.n[0] === nx && w.n[1] === nz) for (const m of w.meshes) { m.visible = false; hiddenWall.push(m); }
 }
-function fly(path, ms, onT) {
-  return new Promise((done) => {
-    if (reduce) { onT(1); applyCam(); renderer.render(scene, camera); return done(); }
-    const t0 = performance.now();
-    const step = (now) => {
-      const t = Math.min(1, (now - t0) / ms); onT(ease(t)); applyCam(); renderer.render(scene, camera);
-      if (t < 1) requestAnimationFrame(step); else done();
-    };
-    requestAnimationFrame(step);
-  });
-}
-async function flyIn(level, to) {
-  const i = KEYS.indexOf(level), { n, out } = entryFor(level, to), A = TOWER;
-  const c1 = A.pos.clone().lerp(out, 0.45); c1.y = THREE.MathUtils.lerp(A.pos.y, to.pos.y, 0.7);
-  const lookMid = new V3(to.pos.x, to.pos.y - 0.3, n[1] ? 0 : to.pos.z);
+function showWalls() { for (const m of hiddenWall) m.visible = true; hiddenWall = []; }
+
+async function enter(i) {
+  if (busy || mode !== "outside") return; busy = true; select(i);
+  document.body.classList.add("flying"); document.body.classList.remove("at-tower"); cursorNum.classList.remove("show");
+  const start = orbitPose(), stop = TOUR[KEYS[i]][0], to = lvlPoint(i, stop[0], stop[1]), look = lvlPoint(i, stop[2], stop[3], 1.2);
+  const out = to.clone().setLength(Math.max(W, D) * 0.95); out.y = to.y;          // just outside the facade, level with the floor
+  if (KEYS[i] === "roof") out.y = to.y + 14;
+  const c1 = start.pos.clone().lerp(out, 0.55); c1.y = THREE.MathUtils.lerp(start.pos.y, to.y, 0.8);
   let wallGone = false;
-  await fly(null, 3400, (t) => {
-    cam.pos.copy(bez(A.pos, c1, out, to.pos, t));
-    const lt = Math.min(1, t * 1.25);
-    cam.look.copy(t < 0.5 ? A.look.clone().lerp(lookMid, lt / 0.625) : lookMid.clone().lerp(to.look, (t - 0.5) / 0.5));
-    cam.fov = THREE.MathUtils.lerp(A.fov, to.fov, t);
-    if (!wallGone && t > 0.72) { hideWall(i, n); wallGone = true; }
+  await fly(3600, (t) => {
+    if (!wallGone && t > 0.6) { hideFacing(i, out); wallGone = true; }
+    return { pos: bez(start.pos, c1, out, to, t), look: start.look.clone().lerp(look, Math.min(1, t * 1.15)) };
   });
+  showWalls(); showLevels(i); setLook(true, i);
+  mode = "inside"; walk.level = i; walk.pos.copy(to); setWalkLook(look);
+  document.body.classList.remove("flying"); document.body.classList.add("in-room");
+  roomUI(); tourStart(i); busy = false;
 }
-async function flyOut(level, from) {
-  const i = KEYS.indexOf(level), { n, out } = entryFor(level, from), B = TOWER;
-  hideWall(i, n);
-  const c2 = B.pos.clone().lerp(out, 0.45); c2.y = THREE.MathUtils.lerp(B.pos.y, from.pos.y, 0.7);
-  const lookMid = new V3(from.pos.x, from.pos.y - 0.3, n[1] ? 0 : from.pos.z);
-  let back = false;
-  await fly(null, 3000, (t) => {
-    cam.pos.copy(bez(from.pos, out, c2, B.pos, t));
-    cam.look.copy(t < 0.5 ? from.look.clone().lerp(lookMid, t / 0.5) : lookMid.clone().lerp(B.look, (t - 0.5) / 0.5));
-    cam.fov = THREE.MathUtils.lerp(from.fov, B.fov, t);
-    if (!back && t > 0.35) { showWalls(); back = true; }
+async function back() {
+  if (busy || mode !== "inside") return; busy = true; tourPause(); closeCard(); clearTags();
+  const i = walk.level, from = { pos: walk.pos.clone(), look: walkLook() };
+  showLevels(-1); setLook(false, i);
+  const out = from.pos.clone().setLength(Math.max(W, D) * 0.95); out.y = from.pos.y; hideFacing(i, out);
+  mode = "flying"; document.body.classList.add("flying"); document.body.classList.remove("in-room");
+  orbit.tAz = orbit.az = Math.atan2(out.x, out.z); orbit.tEl = orbit.el = 0.14;
+  const end = orbitPose(), c2 = end.pos.clone().lerp(out, 0.55); c2.y = THREE.MathUtils.lerp(end.pos.y, out.y, 0.6);
+  let wallsBack = false;
+  await fly(3000, (t) => {
+    if (!wallsBack && t > 0.35) { showWalls(); wallsBack = true; }
+    return { pos: bez(from.pos, out, c2, end.pos, t), look: from.look.clone().lerp(end.look, ease(Math.min(1, t * 1.2))) };
   });
+  mode = "outside"; document.body.classList.remove("flying"); document.body.classList.add("at-tower");
+  $("backBtn").textContent = "← Back to the site"; busy = false;
 }
-async function flyAcross(from, to) {
-  const mid = from.pos.clone().lerp(to.pos, 0.5); mid.y += 0.6;
-  await fly(null, 2000, (t) => {
-    cam.pos.copy(bez(from.pos, from.pos.clone().lerp(mid, 0.6), to.pos.clone().lerp(mid, 0.6), to.pos, t));
-    cam.look.copy(from.look.clone().lerp(to.look, t)); cam.fov = THREE.MathUtils.lerp(from.fov, to.fov, t);
-  });
-}
+$("backBtn").addEventListener("click", (e) => { if (mode !== "outside") { e.preventDefault(); back(); } });
 
-// ============================================================ tower: choose your level
-let sel = 3, state = { where: "tower" }, busy = false;
-const svg = $("floors"), NS = "http://www.w3.org/2000/svg";
-const polys = KEYS.map((k, i) => {
-  const p = document.createElementNS(NS, "polygon"); p.dataset.i = i; svg.appendChild(p);
-  p.addEventListener("pointerenter", () => select(i, true));
-  p.addEventListener("click", () => enter(i));
-  return p;
-});
-function hull(pts) {
-  pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  const cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
-  const lo = [], hi = [];
-  for (const p of pts) { while (lo.length > 1 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
-  for (const p of pts.slice().reverse()) { while (hi.length > 1 && cross(hi[hi.length - 2], hi[hi.length - 1], p) <= 0) hi.pop(); hi.push(p); }
-  return lo.slice(0, -1).concat(hi.slice(0, -1));
+// ============================================================ guided tour (camera glides and pans between stops)
+const tour = { on: false, i: 0, k: 0, t: 0, from: null, to: null, dwell: 0, len: 1 };
+function tourStart(i) { tour.i = i; tour.k = 0; tour.from = null; tour.dwell = 2.6; tour.on = !reduce; caption(TOUR[KEYS[i]][0][4]); tourBtn(); }
+function tourPlay() { if (mode !== "inside") return; tour.on = true; tour.dwell = 0; tour.from = null; tourBtn(); }
+function tourPause() { if (tour.on) { tour.on = false; tourBtn(); } }
+function tourBtn() { $("tourBtn").textContent = tour.on ? "❚❚ Pause tour" : "▶ Guided tour"; $("tourBtn").setAttribute("aria-pressed", tour.on); }
+$("tourBtn").addEventListener("click", () => (tour.on ? tourPause() : tourPlay()));
+function tourStep(dt) {
+  const stops = TOUR[KEYS[tour.i]];
+  if (!tour.from) {
+    if (tour.dwell > 0) { tour.dwell -= dt; walk.yaw += Math.sin(performance.now() / 1600) * 0.0009; return; }   // a slow look-around while stopped
+    tour.k = (tour.k + 1) % stops.length; const s = stops[tour.k];
+    tour.from = { pos: walk.pos.clone(), look: walkLook() }; tour.to = { pos: lvlPoint(tour.i, s[0], s[1]), look: lvlPoint(tour.i, s[2], s[3], 1.2) };
+    tour.t = 0; tour.len = Math.max(2.5, tour.from.pos.distanceTo(tour.to.pos) / 2.4); caption(s[4]);
+  }
+  tour.t = Math.min(1, tour.t + dt / tour.len); const e = ease(tour.t);
+  walk.pos.lerpVectors(tour.from.pos, tour.to.pos, e);
+  setWalkLook(tour.from.look.clone().lerp(tour.to.look, Math.min(1, e * 1.3)));
+  if (tour.t >= 1) { tour.from = null; tour.dwell = 3.4; }
 }
-function layoutFloors() {
-  setCam(TOWER); applyCam();
-  polys.forEach((p, i) => {
-    const y0 = i * H - 0.3, y1 = i === 4 ? 4 * H + 5.6 : (i + 1) * H - 0.3, pts = [];
-    for (const x of [-W / 2 - 0.4, W / 2 + 0.4]) for (const z of [-D / 2 - 0.4, D / 2 + 0.4]) for (const y of [y0, y1]) { const q = project(new V3(x, y, z)); pts.push([q.x, q.y]); }
-    p.setAttribute("points", hull(pts).map((q) => q.map((v) => v.toFixed(1)).join(",")).join(" "));
-  });
-}
-function select(i, fromHover = false) {
-  sel = i; const L = LEVEL[KEYS[i]];
-  $("lvlNum").textContent = i; $("lvlName").textContent = L.name; $("lvlText").textContent = L.text;
-  $("lvlFacts").innerHTML = L.facts.map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join("");
-  $("lvlRange").value = i;
-  polys.forEach((p, k) => p.classList.toggle("on", k === i));
-  if (fromHover) preload(`${KEYS[i]}-main`);
-}
-$("lvlRange").addEventListener("input", (e) => select(+e.target.value));
-$("enterBtn").addEventListener("click", () => enter(sel));
-const cursorNum = $("cursorNum");
-svg.addEventListener("pointermove", (e) => {
-  const p = e.target.closest?.("polygon"); cursorNum.classList.toggle("show", !!p);
-  if (p) { cursorNum.textContent = p.dataset.i; cursorNum.style.transform = `translate(${e.clientX + 18}px,${e.clientY - 34}px)`; }
-});
-svg.addEventListener("pointerleave", () => cursorNum.classList.remove("show"));
-addEventListener("keydown", (e) => {
-  if (busy) return;
-  if (state.where === "tower") {
-    if (e.key === "Enter" && !e.target.closest("a,button")) enter(sel);
-    if (e.key === "ArrowUp" || e.key === "ArrowRight") select(Math.min(4, sel + 1));
-    if (e.key === "ArrowDown" || e.key === "ArrowLeft") select(Math.max(0, sel - 1));
-  } else if (e.key === "Escape") { if (!$("partCard").hidden) closeCard(); else back(); }
-});
+function caption(s) { $("roomText").textContent = s; }
 
-// ============================================================ inside a level
-const tagsEl = $("tags"), backBtn = $("backBtn");
-function setBodyState(where) {
-  document.body.classList.toggle("at-tower", where === "tower");
-  document.body.classList.toggle("in-room", where === "room");
-}
+// ============================================================ tags + cards inside
+const tagsEl = $("tags"); let tagEls = [];
+function clearTags() { tagsEl.innerHTML = ""; tagEls = []; }
 function roomUI() {
-  const { level, spot } = state, s = spotOf(level, spot), i = KEYS.indexOf(level), L = LEVEL[level];
-  $("roomTitle").textContent = s.title; $("roomText").textContent = SPOT_TEXT[`${level}-${spot}`] || L.text;
-  const main = spot === "main";
-  backBtn.textContent = main ? "← Back to the building" : `← Back to ${VIEWS.levels[i].spots[0].title.replace(/^Level \d, /, "")}`;
-  backBtn.setAttribute("href", "#");
-  placeTags();
+  const i = walk.level, k = KEYS[i];
+  $("roomTitle").textContent = LEVEL[k].title; $("backBtn").textContent = "← Back to the building";
+  clearTags();
+  FLOORS[i].parts.forEach((p, n) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "tag" + (p[3] ? " surds" : "");
+    b.innerHTML = `<i>${p[3] ? "S" : "+"}</i><span>${p[0]}</span>`; b.addEventListener("click", () => openCard(i, n, b)); tagsEl.appendChild(b);
+    tagEls.push({ el: b, w: new V3(p[2][0], p[2][1] + i * H, p[2][2]) });
+  });
 }
 function placeTags() {
-  tagsEl.innerHTML = "";
-  if (state.where !== "room") return;
-  const { level, spot } = state, i = KEYS.indexOf(level), s = spotOf(level, spot);
-  setCam(view(s)); applyCam();
-  const used = [];
-  const free = (x, y) => used.every(([a, b]) => Math.abs(a - x) > 150 || Math.abs(b - y) > 34);
-  FLOORS[i].parts.forEach((p, n) => {
-    const w = new V3(p[2][0], p[2][1] + i * H, p[2][2]);
-    if (w.distanceTo(cam.pos) > 34) return;
-    const q = project(w);
-    if (!q.ok || q.x < 60 || q.x > vw - 60 || q.y < 80 || q.y > vh - 120 || !free(q.x, q.y)) return;
-    used.push([q.x, q.y]);
-    const b = document.createElement("button"); b.type = "button"; b.className = "tag" + (p[3] ? " surds" : "");
-    b.innerHTML = `<i>${p[3] ? "S" : "+"}</i><span>${p[0]}</span>`; b.style.left = q.x + "px"; b.style.top = q.y + "px";
-    b.addEventListener("click", () => openCard(i, n, b)); tagsEl.appendChild(b);
-  });
-  for (const o of VIEWS.levels[i].spots) {                    // jump to the level's other spots
-    if (o.id === spot) continue;
-    let q = project(new V3(...o.look)); if (!q.ok || q.x < 80 || q.x > vw - 80 || q.y < 90 || q.y > vh - 140) q = { x: vw - 170, y: vh * 0.42 };
-    const b = document.createElement("button"); b.type = "button"; b.className = "tag go";
-    b.innerHTML = `<span>${o.title.replace(/^Level \d, /, "")}</span><i>→</i>`; b.style.left = q.x + "px"; b.style.top = q.y + "px";
-    b.addEventListener("click", () => goSpot(o.id)); tagsEl.appendChild(b);
+  for (const t of tagEls) {
+    const d = t.w.distanceTo(camera.position), p = t.w.clone().project(camera);
+    const x = (p.x * 0.5 + 0.5) * innerWidth, y = (-p.y * 0.5 + 0.5) * innerHeight;
+    const vis = p.z < 1 && d < 18 && x > 40 && x < innerWidth - 40 && y > 70 && y < innerHeight - 90;
+    t.el.style.opacity = vis ? Math.min(1, (18 - d) / 5) : 0; t.el.style.pointerEvents = vis ? "auto" : "none";
+    t.el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) translate(-50%,-50%)`;
   }
 }
 const card = $("partCard");
 function openCard(i, n, el) {
-  const p = FLOORS[i].parts[n];
-  $("pcN").textContent = p[3] ? `Level ${i} · SURDS` : `Level ${i}`; $("pcTitle").textContent = p[0];
-  $("pcFig").textContent = FIG[p[0]] || "";
-  const L = LEARN[p[0]];
+  const p = FLOORS[i].parts[n], L = LEARN[p[0]];
+  $("pcN").textContent = p[3] ? `Level ${i} · SURDS` : `Level ${i}`; $("pcTitle").textContent = p[0]; $("pcFig").textContent = FIG[p[0]] || "";
   $("pcText").innerHTML = L ? [["What it is", L.is], ["Why it matters", L.why], ["If it goes wrong", L.wrong], ["What SURDS watches", L.surds]]
     .map(([h, t]) => `<span class="pc-h">${h}</span>${t}`).join("<br>") : p[1];
-  card.hidden = false;
-  tagsEl.querySelectorAll(".tag").forEach((t) => t.classList.toggle("on", t === el));
+  card.hidden = false; tagEls.forEach((t) => t.el.classList.toggle("on", t.el === el)); tourPause();
 }
-function closeCard() { card.hidden = true; tagsEl.querySelectorAll(".tag.on").forEach((t) => t.classList.remove("on")); }
+function closeCard() { card.hidden = true; tagEls.forEach((t) => t.el.classList.remove("on")); }
 card.querySelector(".pc-x").addEventListener("click", closeCard);
 
-async function enter(i) {
-  if (busy || state.where !== "tower") return; busy = true;
-  const level = KEYS[i], to = view(spotOf(level, "main"));
-  preload(`${level}-main`); select(i);
-  setBodyState("flying"); document.body.classList.add("flying"); cursorNum.classList.remove("show");
-  setCam(TOWER); await toLive(); await flyIn(level, to);
-  state = { where: "room", level, spot: "main" }; setCam(to); await toStill(`${level}-main`);
-  document.body.classList.remove("flying"); setBodyState("room"); roomUI(); busy = false;
+// ============================================================ frame loop
+let prev = performance.now(), fpsT = 0, fpsN = 0, dpr = renderer.getPixelRatio();
+function adapt(dt) {
+  fpsT += dt; fpsN++;
+  if (fpsT < 2) return;
+  const fps = fpsN / fpsT; fpsT = 0; fpsN = 0;
+  const next = fps < 42 ? Math.max(0.7, dpr - 0.2) : fps > 58 ? Math.min(Math.min(devicePixelRatio, 1.5), dpr + 0.1) : dpr;
+  if (Math.abs(next - dpr) > 0.01) { dpr = next; renderer.setPixelRatio(dpr); composer.setPixelRatio(dpr); resize(); }
 }
-async function goSpot(id) {
-  if (busy) return; busy = true; closeCard();
-  const { level, spot } = state, from = view(spotOf(level, spot)), to = view(spotOf(level, id));
-  preload(`${level}-${id}`); document.body.classList.add("flying");
-  setCam(from); await toLive(); await flyAcross(from, to);
-  state = { where: "room", level, spot: id }; setCam(to); await toStill(`${level}-${id}`);
-  document.body.classList.remove("flying"); roomUI(); busy = false;
+function frame(now) {
+  const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
+  let pos, look;
+  if (flight) {
+    const t = Math.min(1, (now - flight.t0) / flight.ms), r = flight.at(ease(t)); pos = r.pos; look = r.look;
+    if (t >= 1) { const d = flight.done; flight = null; d(); }
+  } else if (mode === "outside") {
+    if (!drag && !reduce) orbit.tAz += dt * 0.025;
+    const k = 1 - Math.exp(-dt * 4); orbit.az += (orbit.tAz - orbit.az) * k; orbit.el += (orbit.tEl - orbit.el) * k; orbit.r += (orbit.tR - orbit.r) * k;
+    ({ pos, look } = orbitPose());
+    levelBoxes.forEach((b, i) => { highlight[i] += ((i === sel ? 0.16 : 0) - highlight[i]) * k; b.material.opacity = highlight[i]; });
+  } else {
+    const sp = (keys.shift ? 6 : 3) * dt;
+    const f = (keys.w || keys.arrowup ? 1 : 0) - (keys.s || keys.arrowdown ? 1 : 0), s = (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
+    if (keys.arrowleft) walk.yaw -= dt * 1.4;
+    if (keys.arrowright) walk.yaw += dt * 1.4;
+    if (f || s) stepWalk(f * sp, s * sp);
+    if (tour.on) tourStep(dt);
+    pos = walk.pos; look = walkLook();
+  }
+  camera.position.copy(pos); camera.lookAt(look); camera.updateMatrixWorld();
+  if (mode === "inside" && !flight) placeTags();
+  if (model && !reduce) for (const s of model.SPIN) s.rotation.y += dt * 7;
+  composer.render(dt); adapt(dt);
+  requestAnimationFrame(frame);
 }
-async function back() {
-  if (busy || state.where !== "room") return;
-  if (state.spot !== "main") return goSpot("main");
-  busy = true; closeCard(); tagsEl.innerHTML = "";
-  const { level } = state, from = view(spotOf(level, "main"));
-  document.body.classList.add("flying"); setBodyState("flying");
-  setCam(from); await toLive(); await flyOut(level, from);
-  state = { where: "tower" }; setCam(TOWER); await toStill("tower");
-  document.body.classList.remove("flying"); setBodyState("tower");
-  backBtn.textContent = "← Back to the site"; backBtn.setAttribute("href", "/home"); layoutFloors(); busy = false;
-}
-backBtn.addEventListener("click", (e) => { if (state.where !== "tower") { e.preventDefault(); back(); } });
 
-// ============================================================ layout + go
+// ============================================================ layout + boot
 function resize() {
-  vw = innerWidth; vh = innerHeight; renderer.setSize(vw, vh, false);
-  if (state.where === "tower") layoutFloors(); else placeTags();
-  if (liveOn) { applyCam(); renderer.render(scene, camera); }
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false); composer.setSize(w, h); camera.aspect = w / h; camera.fov = w / h < 1 ? 62 : 42; camera.updateProjectionMatrix();
 }
 addEventListener("resize", resize);
 (async () => {
-  try { await Promise.race([document.fonts.ready, wait(1500)]); } catch (e) { /* optional */ }
-  await preload("tower"); select(3); resize();
-  $("loading").classList.add("done");
-  setTimeout(() => { buildLive(); KEYS.forEach((k) => preload(`${k}-main`)); }, 60);   // model builds after first paint
+  const bar = $("loadBar"), set = (f) => { bar.style.transform = `scaleX(${f})`; };
+  set(0.05); resize(); select(3);
+  const hdr = await new RGBELoader().loadAsync("/views/explore/env/sky.hdr?v=1"); hdr.mapping = THREE.EquirectangularReflectionMapping;
+  skyBg = hdr; skyEnv = pmrem.fromEquirectangular(hdr).texture; set(0.2);
+  await new Promise((r) => setTimeout(r, 30)); buildBuilding(); set(0.35);
+  await loadEquipment((f) => set(0.35 + f * 0.9 * 0.6));
+  await placePeople().catch((e) => console.warn("people", e)); set(0.95);
+  setLook(false, 0); showLevels(-1);
+  if (new URLSearchParams(location.search).has("debug")) window.__x = { walk, setWalkLook, lvlPoint, tourPause, V3, camera, get model() { return model; } };   // for screenshot checks
+  requestAnimationFrame((n) => { prev = n; frame(n); $("loading").classList.add("done"); set(1); });
 })();

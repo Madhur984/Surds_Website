@@ -14,7 +14,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js";
-import { buildModel, H } from "/views/data-center/dc-model.js?v=2";
+import { buildModel, H } from "/views/data-center/dc-model.js?v=3";
 const VIEWS = await (await fetch("/views/explore/views.json")).json();
 const q = new URLSearchParams(location.search);
 const canvas = document.getElementById("c");

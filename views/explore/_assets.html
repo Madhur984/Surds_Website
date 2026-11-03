@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>asset check</title>
+<style>html,body{margin:0;background:#1d2024;overflow:hidden;} canvas{display:block;}</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+</head>
+<body>
+<!-- Dev tool (not linked): ?a=crah renders the SimReady asset from +X, +Z, -X, -Z (left to right) to check which side is its front. -->
+<canvas id="c"></canvas>
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+const name = new URLSearchParams(location.search).get("a");
+const W = 1600, Hh = 400;
+const r = new THREE.WebGLRenderer({ canvas: document.getElementById("c"), antialias: true, preserveDrawingBuffer: true });
+r.setSize(W, Hh); r.toneMapping = THREE.ACESFilmicToneMapping; r.setScissorTest(true);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x2a2e34);
+scene.environment = new THREE.PMREMGenerator(r).fromScene(new RoomEnvironment(), 0.04).texture;
+const l = new GLTFLoader(); l.setMeshoptDecoder(MeshoptDecoder);
+const g = await l.loadAsync(`/views/explore/assets/${name}.glb`); scene.add(g.scene);
+const box = new THREE.Box3().setFromObject(g.scene), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+const R = size.length() * 1.6, cam = new THREE.PerspectiveCamera(35, 1, 0.01, 100);
+[[1, 0], [0, 1], [-1, 0], [0, -1]].forEach(([x, z], i) => {
+  cam.position.set(c.x + x * R, c.y + size.y * 0.35, c.z + z * R); cam.lookAt(c); cam.aspect = 1; cam.updateProjectionMatrix();
+  r.setViewport(i * 400, 0, 400, 400); r.setScissor(i * 400, 0, 400, 400); r.render(scene, cam);
+});
+document.title = `done ${size.x.toFixed(2)} ${size.y.toFixed(2)} ${size.z.toFixed(2)}`;
+</script>
+</body>
+</html>

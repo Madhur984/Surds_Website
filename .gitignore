@@ -41,3 +41,6 @@ models/isometric-office.glb
 
 # raw 46 MB Sketchfab export; the site loads models/isometric-office-web.glb
 isometric_office.glb
+
+# Python bytecode
+__pycache__/

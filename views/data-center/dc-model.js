@@ -9,6 +9,8 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 export const W = 44, D = 28, H = 8.4, RF = 0.6;   // footprint, storey height, raised floor
 const V3 = THREE.Vector3, UP = new V3(0, 1, 0);
 let maxAniso = 8;
+let REAL = new Set();
+let PEOPLE = [];         // with REAL "people", person() records where people go (pose, facing) instead of drawing capsules   // pieces another page replaces with real equipment models (see /explore)
 
 // ============================================================ helpers
 function rng(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
@@ -396,7 +398,8 @@ function sensor(g, x, y, z, ny = 1) {           // SURDS node: orange puck + pul
   ring.position.set(x, y + 0.03, z); ring.rotation.x = -Math.PI / 2 * ny; keep(ring); g.add(ring); RINGS.push(ring);
 }
 function leakRope(g, pts) { run(g, pts.map((p) => [p[0], p[1] + 0.03, p[2]]), 0.025, M.sensor, 6); }
-function person(g, x, z, y = 0, sitting = false, vest = false) {
+function person(g, x, z, y = 0, sitting = false, vest = false, o = {}) {
+  if (REAL.has("people")) { PEOPLE.push({ g, x, y, z, sitting, vest, ...o }); return; }
   const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.2, sitting ? 0.35 : 0.75, 4, 10), vest ? M.vest : M.shirt);
   body.position.set(x, y + (sitting ? 0.8 : 1.15), z); g.add(body);
   if (!sitting) { const legs = new THREE.Mesh(new THREE.CapsuleGeometry(0.17, 0.5, 4, 8), M.trouser); legs.position.set(x, y + 0.45, z); g.add(legs); }
@@ -439,6 +442,11 @@ function buildPlant(g) {
   // chillers: evaporator + condenser shells, compressor, panel, water boxes
   for (const x of [4.5, 10.5, 16.5]) {
     const z = -9;
+    if (REAL.has("chillers")) {             // real chiller sits here; keep only its pipe connections
+      run(g, [[x - 2.85, 0.95, z - 0.7], [x - 2.85, 3.6, z - 0.7], [x - 2.85, 3.6, -12.4]], 0.18, M.blue);
+      run(g, [[x - 2.4, 1.45, z - 0.7], [x - 2.4, 4.4, z - 0.7], [x - 2.4, 4.4, -12.4]], 0.18, M.orange);
+      continue;
+    }
     for (const dx of [-1.6, 1.6]) box(g, 0.4, 0.45, 2.2, M.genGrey, x + dx, 0, z);
     cyl(g, 0.55, 5, M.chiller, x, 0.95, z - 0.7, "x", 24); cyl(g, 0.55, 5, M.chiller, x, 0.95, z + 0.7, "x", 24);
     cyl(g, 0.48, 1.8, std(0x3f566e, 0.4, 0.5), x - 0.3, 2.05, z, "x", 20); box(g, 0.8, 0.8, 0.8, M.genGrey, x + 1.1, 1.65, z - 0.4);
@@ -465,7 +473,7 @@ function buildPlant(g) {
   for (const [x, z, s] of [[10, 5, 1.1], [11.4, 5, 0.9], [10.6, 6.6, 1.0], [12.6, 8.4, 1.2]]) { box(g, 1.2, 0.14, 1.0, M.wood, x, 0, z); box(g, s, s * 0.8, s * 0.8, std(0xb08a5a, 0.85), x, 0.14, z); }
   box(g, 0.6, 0.12, 1.4, M.red, 8.2, 0, 9); cyl(g, 0.03, 1.1, M.black, 8.2, 0.1, 9.6);
   // people + SURDS: header temperatures, leak rope under the pipework, fuel level, generator hall
-  person(g, -12.6, -3.6, 0, false, true);
+  person(g, -12.6, -3.6, 0, false, true, { pose: "tablet", yaw: Math.PI, hat: true });
   sensor(g, 12, 3.92, -12.4); sensor(g, 12, 4.72, -12.4); sensor(g, -14, 3.62, 5); sensor(g, -16.6, 2.6, -13.5, 0);
   leakRope(g, [[2, 0.003, -11.4], [20.4, 0.003, -11.4]]);
 }
@@ -476,16 +484,16 @@ function buildPower(g) {
   plane(g, 20, 10, M.lobby, 12, 0.004, 9);
   plane(g, 20, 17.7, std(0x23262b, 0.7), 12, 0.003, -4.85);
   for (const z of [-5.4, 0.4]) box(g, 9, 0.006, 0.1, M.yellow, -17.2, 0.004, z);
-  instance(g, boxGeo(0.95, 2.3, 0.9), [M.grey, M.grey, M.grey, M.grey, M.panel, M.grey], Array.from({ length: 14 }, (_, i) => [-20.5 + i, 0, -12.4]));
-  instance(g, boxGeo(2.4, 2.0, 1.0), [M.white, M.white, M.white, M.white, M.ups, M.white], [-19.2, -16.6, -14, -11.4].map((x) => [x, 0, -8.2]));
+  if (!REAL.has("switchgear")) instance(g, boxGeo(0.95, 2.3, 0.9), [M.grey, M.grey, M.grey, M.grey, M.panel, M.grey], Array.from({ length: 14 }, (_, i) => [-20.5 + i, 0, -12.4]));
+  if (!REAL.has("ups")) instance(g, boxGeo(2.4, 2.0, 1.0), [M.white, M.white, M.white, M.white, M.ups, M.white], [-19.2, -16.6, -14, -11.4].map((x) => [x, 0, -8.2]));
   const bl = []; for (const z of [-4.6, -2.6, -0.6]) for (let i = 0; i < 8; i++) bl.push([-20.4 + i * 0.85, 0, z]);
   instance(g, boxGeo(0.8, 2.0, 0.8), [M.grey, M.grey, M.grey, M.grey, M.batt, M.grey], bl);
-  instance(g, boxGeo(0.8, 2.0, 0.8), [M.grey, M.grey, M.grey, M.grey, M.panel, M.grey], [0, 1, 2, 3].map((i) => [-11.2 + i * 0.85, 0, -3.6]));
+  if (!REAL.has("pdu")) instance(g, boxGeo(0.8, 2.0, 0.8), [M.grey, M.grey, M.grey, M.grey, M.panel, M.grey], [0, 1, 2, 3].map((i) => [-11.2 + i * 0.85, 0, -3.6]));
   // B side: a second, fully separate UPS and battery string so either can carry the load (2N)
-  instance(g, boxGeo(2.4, 2.0, 1.0), [M.white, M.white, M.white, M.white, M.ups, M.white], [-19.2, -16.6, -14, -11.4].map((x) => [x, 0, 4.2]));
+  if (!REAL.has("ups")) instance(g, boxGeo(2.4, 2.0, 1.0), [M.white, M.white, M.white, M.white, M.ups, M.white], [-19.2, -16.6, -14, -11.4].map((x) => [x, 0, 4.2]));
   const bl2 = []; for (const z of [7.4, 9.4, 11.4]) for (let i = 0; i < 8; i++) bl2.push([-20.4 + i * 0.85, 0, z]);
   instance(g, boxGeo(0.8, 2.0, 0.8), [M.grey, M.grey, M.grey, M.grey, M.batt, M.grey], bl2);
-  instance(g, boxGeo(0.8, 2.0, 0.8), [M.grey, M.grey, M.grey, M.grey, M.panel, M.grey], [0, 1, 2, 3].map((i) => [-11.2 + i * 0.85, 0, 8.4]));
+  if (!REAL.has("pdu")) instance(g, boxGeo(0.8, 2.0, 0.8), [M.grey, M.grey, M.grey, M.grey, M.panel, M.grey], [0, 1, 2, 3].map((i) => [-11.2 + i * 0.85, 0, 8.4]));
   for (const [z, t] of [[1.6, "A"], [13.1, "B"]]) { const sg = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), basic({ map: signTex(`UPS ${t}`) })); sg.position.set(-15.4, 2.6, z); keep(sg); g.add(sg); }
   keep(box(g, 19.8, 3.2, 0.06, M.glass, -11.6, 0, 2.6));
   for (let x = -21.4; x < -1.6; x += 2.2) box(g, 0.08, 3.2, 0.08, M.metalDark, x, 0, 2.6);
@@ -504,14 +512,14 @@ function buildPower(g) {
     for (let i = 0; i < 5; i++) {
       const x = 5.5 + i * 2.7; box(g, 2.4, 0.06, 0.9, M.desk, x, y + 0.72, z); box(g, 0.06, 0.72, 0.8, M.metalDark, x - 1.1, y, z); box(g, 0.06, 0.72, 0.8, M.metalDark, x + 1.1, y, z);
       for (let k = -1; k <= 1; k++) { const s = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.36), M.screens[(i + k + 3) % 4]); s.position.set(x + k * 0.68, y + 1.15, z - 0.3); s.rotation.y = k * -0.18; keep(s); g.add(s); box(g, 0.66, 0.4, 0.03, M.black, x + k * 0.68, y + 0.95, z - 0.33, k * -0.18); }
-      chair(g, x, z + 1.0, y); if (i % 2 === 0) person(g, x, z + 0.95, y, true);
+      chair(g, x, z + 1.0, y); if (i % 2 === 0) person(g, x, z + 0.95, y, true, false, { pose: "sit", yaw: Math.PI });
     }
   }
   // security: mantrap, turnstiles, reception
   keep(box(g, 2, 2.4, 2, M.glass, 6, 0, 9)); for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) box(g, 0.08, 2.4, 0.08, M.metal, 6 + dx, 0, 9 + dz); box(g, 2.1, 0.12, 2.1, M.metal, 6, 2.4, 9);
   for (let i = 0; i < 4; i++) { box(g, 0.22, 1.0, 1.2, M.metal, 9.5 + i * 1.2, 0, 9); keep(box(g, 0.9, 0.7, 0.03, M.glass, 10.1 + i * 1.2, 0.35, 9)); }
   box(g, 4, 1.1, 1, M.desk, 17, 0, 10); for (const k of [-1, 1]) { const s = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.35), M.screens[3]); s.position.set(17 + k * 0.8, 1.45, 9.85); keep(s); g.add(s); }
-  person(g, 17, 11, 0, false, false);
+  person(g, 17, 11, 0, false, false, { pose: "stand" });
   sensor(g, -17.85, 2.04, -2.6); sensor(g, -14.45, 2.04, -4.6); sensor(g, -11.4, 2.04, -8.2); sensor(g, 11.5, 4.95, -13.25);
   risers(g, 0, H);
 }
@@ -547,7 +555,7 @@ function buildNetwork(g) {
     pipe(g, [2.2, RF + 3.2, z], [20.4, RF + 3.2, z], 0.12, M.blue); pipe(g, [2.2, RF + 3.45, z], [20.4, RF + 3.45, z], 0.12, M.orange);
     for (const d of doors.filter((q) => Math.abs(q[2] - dz) < 0.01)) { pipe(g, [d[0] - 0.15, RF + 2.4, dz], [d[0] - 0.15, RF + 3.2, z], 0.035, M.blue, 6); pipe(g, [d[0] + 0.15, RF + 2.4, dz], [d[0] + 0.15, RF + 3.45, z], 0.035, M.orange, 6); }
   }
-  instance(g, boxGeo(1.2, 2.2, 1.0), [M.white, M.white, M.white, M.white, M.cdu, M.white], [4.5, 8.5, 14.5, 18.5].map((x) => [x, RF, -12.6]));
+  if (!REAL.has("cdu")) instance(g, boxGeo(1.2, 2.2, 1.0), [M.white, M.white, M.white, M.white, M.cdu, M.white], [4.5, 8.5, 14.5, 18.5].map((x) => [x, RF, -12.6]));
   for (const x of [4.5, 8.5, 14.5, 18.5]) { run(g, [[x - 0.25, RF + 2.2, -12.6], [x - 0.25, RF + 3.2, -12.6], [x - 0.25, RF + 3.2, -10.7]], 0.1, M.blue); run(g, [[x + 0.25, RF + 2.2, -12.6], [x + 0.25, RF + 3.45, -12.6], [x + 0.25, RF + 3.45, -10.7]], 0.1, M.orange); }
   // immersion tanks: open tubs of dielectric fluid with server blades standing in it
   for (const x of [5.5, 11, 16.5]) {
@@ -576,9 +584,9 @@ function buildNetwork(g) {
   for (let k = 0; k < 3; k++) { box(g, 4.4, 0.04, 0.6, M.metal, -8.5, RF + 0.4 + k * 0.7, 11.9); for (let c = 0; c < 8; c++) box(g, 0.4, 0.3, 0.4, std(0x6a7480, 0.6), -10.3 + c * 0.52, RF + 0.44 + k * 0.7, 11.9); }
   box(g, 3.2, 0.9, 1.0, M.desk, 1.2, RF, 10.5); box(g, 0.48, 0.12, 0.7, M.rackSide, 0.6, RF + 0.9, 10.5); box(g, 0.48, 0.18, 0.7, M.rackSide, 1.6, RF + 0.9, 10.5);
   { const s = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.34), M.screens[2]); s.position.set(2.3, RF + 1.25, 10.2); keep(s); g.add(s); }
-  person(g, 1.2, 11.4, RF, false, false);
+  person(g, 1.2, 11.4, RF, false, false, { pose: "walk", yaw: -Math.PI / 2 });
   racks(g, list, 5);
-  person(g, 11.2, -7.5, RF, false, false);
+  person(g, 11.2, -8.2, RF, false, false, { pose: "kneel", yaw: Math.PI });
   leakRope(g, [[3, RF, -11.95], [20, RF, -11.95]]); sensor(g, 10.5, RF + 3.34, -10.82, 0); sensor(g, -13.5, RF + 1.3, -2.58, 0);
   risers(g, 0, H);
 }
@@ -586,7 +594,7 @@ function buildNetwork(g) {
 // ============================================================ level 3 · data hall
 function buildHall(g) {
   raisedFloor(g);
-  instance(g, boxGeo(2.6, 2.9, 1.0), [M.grey, M.grey, M.grey, M.grey, M.louver, M.grey], Array.from({ length: 8 }, (_, i) => [-17.5 + i * 5, 0, -12.6]));
+  if (!REAL.has("crah")) instance(g, boxGeo(2.6, 2.9, 1.0), [M.grey, M.grey, M.grey, M.grey, M.louver, M.grey], Array.from({ length: 8 }, (_, i) => [-17.5 + i * 5, 0, -12.6]));
   const list = [], ZC = [-8.8, -3.6, 1.6, 6.8], X0 = [-18.4, 1.6];
   const kinds = ["mix0", "mix1", "mix2", "mix3"];
   for (const zc of ZC) for (const x0 of X0) {
@@ -619,7 +627,7 @@ function buildHall(g) {
   pipe(g, [-20.5, RF + 1.75, 3], [-20.5, RF + 1.75, 7.1], 0.04, M.metal, 8);
   for (const [x, z] of [[-21, -13], [21, -13], [-21, 13], [21, 13]]) sphere(g, 0.15, M.black, x, 6.6, z, 10);
   // people + crash cart
-  person(g, -10, -3.6, RF); person(g, 8, 11.5, RF, false, true); box(g, 0.6, 0.9, 0.45, M.metalDark, 9.2, RF, 11.5);
+  person(g, -10, -3.6, RF, false, false, { pose: "tablet", yaw: Math.PI }); person(g, 8, 12.7, RF, false, true, { pose: "stand", yaw: Math.PI / 2 }); box(g, 0.6, 0.9, 0.45, M.metalDark, 9.2, RF, 12.7);
   { const s = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.26), M.screens[0]); s.position.set(9.2, RF + 1.15, 11.73); keep(s); g.add(s); }
   // SURDS: rack inlet top/middle/bottom, containment pressure, leak rope in front of the CRAHs
   for (const y of [0.5, 1.2, 1.9]) sensor(g, 5.5, RF + y, 1.03, 0);
@@ -644,9 +652,10 @@ function buildRoof(g) {
   // six framed cooling units in a 3 x 2 grid, exactly as on the city model: plant box, white steel frame, four fan decks
   for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++) {
     const ux = -W / 3 + i * W / 3, uz = -D / 4 + j * D / 2;
+    frameBox(g, M.white, ux, uz, 0, W / 3.6, D / 2.7, 3.4, 0.18, 1);
+    if (REAL.has("roofplant")) continue;     // real condensers stand inside the frames
     box(g, W / 4.2, 2.4, D / 3.2, [M.metal, M.metal, M.roofTop, M.metal, M.metal, M.metal], ux, 0, uz);
     for (let k = 0; k < 8; k++) box(g, W / 4.2 - 0.4, 0.06, 0.04, M.metalDark, ux, 0.4 + k * 0.25, uz + D / 6.4 + 0.02);
-    frameBox(g, M.white, ux, uz, 0, W / 3.6, D / 2.7, 3.4, 0.18, 1);
     for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) {
       const fx = ux - W / 14 + a * W / 7, fz = uz - D / 10 + b * D / 5;
       box(g, 2.6, 0.7, 2.0, M.metalDark, fx, 2.4, fz);
@@ -669,7 +678,7 @@ function buildRoof(g) {
   // SURDS weather node on a short pole in the front corner
   cyl(g, 0.05, 1.8, M.metal, 20.3, 0, 12.5, "y", 8); box(g, 0.35, 0.3, 0.3, M.white, 20.3, 1.8, 12.5); sensor(g, 20.3, 2.12, 12.5);
   sensor(g, 4, 1.24, -12.4);
-  keep(sphere(g, 0.55, basic({ color: 0xff8a2a }), W / 3 - 3, 3.9, -D / 4 + 1.5, 16));
+  if (!REAL.has("roofplant")) keep(sphere(g, 0.55, basic({ color: 0xff8a2a }), W / 3 - 3, 3.9, -D / 4 + 1.5, 16));
 }
 
 // ============================================================ content: levels, parts and pins
@@ -779,7 +788,8 @@ function consolidate(g) {
 }
 
 // ============================================================ build
-export function buildModel(renderer) {
+export function buildModel(renderer, opts = {}) {
+  REAL = new Set(opts.real || []); PEOPLE = [];
   maxAniso = renderer.capabilities.getMaxAnisotropy();
   makeMaterials();
   const floors = FLOORS.map((F, i) => {
@@ -790,6 +800,6 @@ export function buildModel(renderer) {
     g.traverse((o) => { if (o.isMesh) { o.receiveShadow = true; o.userData.caster = !(o.material.transparent) && !o.isInstancedMesh ? true : o.isInstancedMesh && o.castShadow; o.castShadow = false; } });
     return { g, walls, F };
   });
-  return { floors, M, LEDS, SPIN, RINGS };
+  return { floors, M, LEDS, SPIN, RINGS, PEOPLE };
 }
 export { FLOORS, FIG, FLOWS, FLOOR_OF };

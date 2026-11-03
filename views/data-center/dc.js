@@ -5,7 +5,7 @@
    racks, LEDs and tiles are instanced. Units are metres, Y is up, the camera looks in from +X/+Z. */
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { buildModel, W, D, H, RF, FLOORS, FIG, FLOWS, FLOOR_OF } from "./dc-model.js?v=2";
+import { buildModel, W, D, H, RF, FLOORS, FIG, FLOWS, FLOOR_OF } from "./dc-model.js?v=8";
 import { LEARN, LEVEL_SIMPLE } from "./dc-learn.js?v=1";
 
 const GAP = 17, LIFT = 90;

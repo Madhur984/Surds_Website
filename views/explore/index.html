@@ -4,17 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SURDS | Explore the data center</title>
-<meta name="description" content="Choose a level of a SURDS-monitored data center and fly inside: the plant, power and operations, the network and AI floor, the data hall and the roof.">
+<meta name="description" content="Walk through a SURDS-monitored data center in real time: the plant, power and operations, the network and AI floor, the data hall and the roof, with real Vertiv and Trane equipment.">
 <link rel="icon" href="/shared/favicon.svg">
 <link rel="stylesheet" href="/shared/fonts.css">
-<link rel="preload" href="/views/explore/img/tower.webp" as="image">
-<link rel="stylesheet" href="/views/explore/explore.css?v=2">
+<link rel="stylesheet" href="/views/explore/explore.css?v=3">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
 </head>
 <body class="at-tower">
-<canvas id="live" aria-hidden="true"></canvas>
-<img id="still" src="/views/explore/img/tower.webp" alt="A SURDS-monitored data center at dusk, its five levels lit from inside.">
-<svg id="floors" aria-hidden="true"></svg>
+<canvas id="live" aria-label="Real-time 3D data center. Outside: drag to orbit and pick a level. Inside: drag to look, W A S D or arrow keys to walk."></canvas>
 <div id="tags"></div>
 <div id="cursorNum" aria-hidden="true"></div>
 
@@ -25,13 +22,13 @@
 
 <aside class="panel" id="panel" aria-label="Choose a level">
   <h1>Choose your level</h1>
-  <p class="lede">Point at a level and its rooms light up. Click it, or slide to a level and press Enter, and you go in through the glass.</p>
+  <p class="lede">Point at a floor and it lights up. Click it, or slide to a level and press Enter, and you fly in through the glass. Drag to walk around the building.</p>
   <div class="pick">
     <span class="lvl-label">Level</span>
     <span class="lvl-num" id="lvlNum">3</span>
   </div>
   <h2 id="lvlName">Data hall</h2>
-  <p id="lvlText">Hundreds of racks in sealed aisles.</p>
+  <p id="lvlText"></p>
   <dl class="facts" id="lvlFacts"></dl>
   <div class="slider">
     <span>0</span>
@@ -46,6 +43,17 @@
   <p id="roomText"></p>
 </section>
 
+<div class="walkbar" id="walkbar">
+  <button type="button" id="tourBtn" aria-pressed="true">❚❚ Pause tour</button>
+  <span class="hint">Drag to look · <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or scroll to walk · <kbd>Space</kbd> tour · <kbd>Esc</kbd> out</span>
+  <div class="pad" aria-label="Walk">
+    <button type="button" data-pad="1,0" aria-label="Forward">▲</button>
+    <button type="button" data-pad="0,-1" aria-label="Left">◀</button>
+    <button type="button" data-pad="-1,0" aria-label="Back">▼</button>
+    <button type="button" data-pad="0,1" aria-label="Right">▶</button>
+  </div>
+</div>
+
 <div class="part-card" id="partCard" role="dialog" aria-labelledby="pcTitle" hidden>
   <button type="button" class="pc-x" aria-label="Close">×</button>
   <span class="pc-n" id="pcN"></span>
@@ -54,7 +62,9 @@
   <p id="pcText"></p>
 </div>
 
-<div id="loading">Loading the building…</div>
-<script type="module" src="/views/explore/explore.js?v=4"></script>
+<p class="credits">Equipment models: <a href="https://huggingface.co/datasets/Vertiv/simready-assets" target="_blank" rel="noopener">Vertiv</a> and <a href="https://huggingface.co/datasets/TraneTechnologies/simready-assets" target="_blank" rel="noopener">Trane</a> NVIDIA SimReady assets, CC BY 4.0, simplified for the web. Sky: <a href="https://polyhaven.com/a/evening_road_01_puresky" target="_blank" rel="noopener">Poly Haven</a>, CC0.</p>
+
+<div id="loading"><span>Loading the building</span><i><b id="loadBar"></b></i></div>
+<script type="module" src="/views/explore/explore.js?v=17"></script>
 </body>
 </html>
