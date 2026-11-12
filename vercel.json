@@ -21,6 +21,14 @@
       "destination": "/views/card-tour/index.html"
     },
     {
+      "source": "/product",
+      "destination": "/views/product/index.html"
+    },
+    {
+      "source": "/gateway",
+      "destination": "/views/gateway/index.html"
+    },
+    {
       "source": "/survey",
       "destination": "/survey.html"
     },

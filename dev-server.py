@@ -25,6 +25,8 @@ ROUTES = {
     "/classic": "/views/main/index.html",
     "/enterprise": "/views/enterprise/index.html",
     "/card-tour": "/views/card-tour/index.html",
+    "/product": "/views/product/index.html",
+    "/gateway": "/views/gateway/index.html",
     "/survey": "/survey.html",
     "/data-center": "/views/data-center/index.html",
     "/render": "/views/render/index.html",

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SURDS G1 | Intelligence that stays on site.</title>
+<meta name="description" content="SURDS G1 edge gateway. Senses, decides and acts inside your facility, anchors the self-healing SURDS sensor mesh, and keeps working when the uplink doesn't.">
+<link rel="icon" href="/shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/shared/fonts.css">
+<link rel="stylesheet" href="/views/gateway/gateway.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module" src="/views/gateway/gateway.js"></script>
+</head>
+<body>
+
+<!-- Loader -->
+<div class="loader" id="loader" aria-hidden="true">
+  <span class="loader-brand">SURDS</span>
+  <span class="loader-text">Preparing your experience</span>
+  <span class="loader-bar"><i id="loader-fill"></i></span>
+</div>
+
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<!-- Header -->
+<header class="site-header" id="site-header">
+  <a href="#top" class="brand-lockup" aria-label="SURDS: Back to top">
+    <span class="brand-word">SURDS</span>
+    <span class="brand-model">G1</span>
+  </a>
+  <nav class="desktop-nav" aria-label="Product sections">
+    <a href="#promise" data-nav="promise">The idea</a>
+    <a href="#engineering" data-nav="engineering">Design</a>
+    <a href="#materials" data-nav="materials">Finishes</a>
+    <a href="#specifications" data-nav="specifications">Specifications</a>
+  </nav>
+  <div class="header-actions">
+    <a class="header-configure" href="#materials">Choose your finish <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M5.5 4H12v6.5"/></svg></a>
+    <button class="icon-button bag-button" id="bag-button" type="button" aria-label="Open pilot kit, 0 items">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7h12l-1 10H5L4 7Z"/><path d="M7.5 7V5.5a2.5 2.5 0 0 1 5 0V7"/></svg>
+      <span class="bag-count" id="bag-count" hidden>0</span>
+    </button>
+    <button class="icon-button mobile-menu-button" id="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h14M3 13h14"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile nav -->
+<div class="mobile-nav" id="mobile-nav" hidden>
+  <a href="#promise">The idea</a>
+  <a href="#engineering">Design</a>
+  <a href="#materials">Finishes</a>
+  <a href="#specifications">Specifications</a>
+  <a href="#materials" class="commerce-button commerce-button-primary">Choose your finish</a>
+</div>
+
+<main id="main-content">
+
+  <!-- ============ HERO: scroll-driven 3D story ============ -->
+  <section class="immersive-hero" id="top" aria-label="SURDS G1 product story">
+    <div class="hero-sticky">
+      <div class="hero-bg-word" aria-hidden="true">SURDS</div>
+      <div class="hero-meta">
+        <span>Edge gateway</span>
+        <span>G1 / Field lab</span>
+      </div>
+
+      <div class="stage" id="hero-stage" tabindex="0" role="img"
+           aria-label="Interactive 3D model of the SURDS G1 gateway. Use the left and right arrow keys to turn it, up and down to tilt it, and Home to reset the view. You can also drag it sideways.">
+        <canvas class="stage-canvas"></canvas>
+      </div>
+
+      <div class="hero-chapters">
+        <article class="hero-copy is-active" data-chapter="0">
+          <p class="kicker"><i></i>SURDS G1</p>
+          <h1>INTELLIGENCE<br>THAT STAYS<br>ON SITE.</h1>
+          <p class="hero-lede">An edge gateway that senses, decides and acts inside your facility, not in someone else's cloud.</p>
+          <p class="hero-tags"><span>Edge-native</span><span>Mesh anchor</span></p>
+          <div class="hero-ctas">
+            <a href="#materials" class="commerce-button commerce-button-primary">Choose your finish <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M5.5 4H12v6.5"/></svg></a>
+            <a href="#engineering" class="hero-explore-link">Explore the mesh <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M4 9l4 4 4-4"/></svg></a>
+          </div>
+          <p class="hero-price"><b>Pilot pricing</b><span>On request · Field lab preview</span></p>
+        </article>
+        <article class="hero-copy" data-chapter="1" aria-hidden="true">
+          <p class="kicker"><i></i>FORM</p>
+          <h2>BUILT AROUND<br>THE SIGNAL.</h2>
+          <p class="hero-lede">Twin articulated antennas on a low enclosure keep the mesh in reach from a wall, a rack or a ceiling.</p>
+          <p class="hero-tags"><span>Dual antenna</span><span>Low profile</span></p>
+          <div class="hero-ctas">
+            <a href="#materials" class="commerce-button commerce-button-primary">Choose your finish <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M5.5 4H12v6.5"/></svg></a>
+            <a href="#engineering" class="hero-explore-link">Explore the mesh <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M4 9l4 4 4-4"/></svg></a>
+          </div>
+          <p class="hero-price"><b>Pilot pricing</b><span>On request · Field lab preview</span></p>
+        </article>
+        <article class="hero-copy" data-chapter="2" aria-hidden="true">
+          <p class="kicker"><i></i>CONTROL</p>
+          <h2>DECIDES<br>WHERE IT SITS.</h2>
+          <p class="hero-lede">Rules and alarms run on the gateway itself, so a cut uplink never means a blind facility.</p>
+          <p class="hero-tags"><span>Local rules</span><span>Offline-safe</span></p>
+          <div class="hero-ctas">
+            <a href="#materials" class="commerce-button commerce-button-primary">Choose your finish <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M5.5 4H12v6.5"/></svg></a>
+            <a href="#engineering" class="hero-explore-link">Explore the mesh <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M4 9l4 4 4-4"/></svg></a>
+          </div>
+          <p class="hero-price"><b>Pilot pricing</b><span>On request · Field lab preview</span></p>
+        </article>
+        <article class="hero-copy" data-chapter="3" aria-hidden="true">
+          <p class="kicker"><i></i>ENDURANCE</p>
+          <h2>BUILT FOR ROOMS<br>THAT CAN'T FAIL.</h2>
+          <p class="hero-lede">Data halls, clean rooms and plant floors. Sealed, fanless and designed to keep reporting.</p>
+          <p class="hero-tags"><span>Fanless</span><span>24/7 duty</span></p>
+          <div class="hero-ctas">
+            <a href="#materials" class="commerce-button commerce-button-primary">Choose your finish <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M5.5 4H12v6.5"/></svg></a>
+            <a href="#engineering" class="hero-explore-link">Explore the mesh <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M4 9l4 4 4-4"/></svg></a>
+          </div>
+          <p class="hero-price"><b>Pilot pricing</b><span>On request · Field lab preview</span></p>
+        </article>
+        <article class="hero-copy" data-chapter="4" aria-hidden="true">
+          <p class="kicker"><i></i>SIGNATURE</p>
+          <h2>G1. THE MESH'S<br>ANCHOR.</h2>
+          <p class="hero-lede">Every SURDS sensor finds it. When one path breaks, the mesh routes around it.</p>
+          <p class="hero-tags"><span>Pilot batch</span><span>IIT Kharagpur</span></p>
+          <div class="hero-ctas">
+            <a href="#materials" class="commerce-button commerce-button-primary">Choose your finish <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M5.5 4H12v6.5"/></svg></a>
+            <a href="#engineering" class="hero-explore-link">Explore the mesh <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M4 9l4 4 4-4"/></svg></a>
+          </div>
+          <p class="hero-price"><b>Pilot pricing</b><span>On request · Field lab preview</span></p>
+        </article>
+      </div>
+
+      <div class="hero-footer">
+        <div class="hero-footer-top">
+          <span class="eyebrow">Explore the object</span>
+          <div class="stage-controls" data-stage="hero">
+            <button type="button" class="stage-control" data-turn="-1" aria-label="Rotate product left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 9a6 6 0 1 1 1.8 5.2"/><path d="M5 4v5h5"/></svg></button>
+            <button type="button" class="stage-control stage-control-reset" data-reset aria-label="Reset view">Reset</button>
+            <button type="button" class="stage-control" data-turn="1" aria-label="Rotate product right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15 9a6 6 0 1 0-1.8 5.2"/><path d="M15 4v5h-5"/></svg></button>
+          </div>
+        </div>
+        <nav class="scroll-progress" id="scroll-progress" aria-label="Hero scroll progress">
+          <button type="button" data-goto="0" aria-label="Chapter 1: Identity" class="is-active"><span>01</span>Identity<i><b></b></i></button>
+          <button type="button" data-goto="1" aria-label="Chapter 2: Form"><span>02</span>Form<i><b></b></i></button>
+          <button type="button" data-goto="2" aria-label="Chapter 3: Control"><span>03</span>Control<i><b></b></i></button>
+          <button type="button" data-goto="3" aria-label="Chapter 4: Endurance"><span>04</span>Endurance<i><b></b></i></button>
+          <button type="button" data-goto="4" aria-label="Chapter 5: Signature"><span>05</span>Signature<i><b></b></i></button>
+        </nav>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROMISE ============ -->
+  <section class="content-band band-light promise-band" id="promise">
+    <div class="band-inner split">
+      <div class="split-head reveal">
+        <p class="eyebrow">Edge gateway</p>
+        <h2 class="display">LOCAL. MESHED.<br>SEALED.</h2>
+        <p class="band-lede">On-site decisions, a self-healing sensor mesh and a sealed body in one low-profile gateway.</p>
+      </div>
+      <div class="promise-grid">
+        <article class="reveal"><p class="eyebrow">Edge-native</p><h3>Decisions on site</h3><p>Rules run on the gateway, so response time is set by your facility, not a round trip to the cloud.</p></article>
+        <article class="reveal"><p class="eyebrow">Self-healing mesh</p><h3>No single point of failure</h3><p>Sensors find the gateway and each other, and route around a broken node without anyone noticing.</p></article>
+        <article class="reveal"><p class="eyebrow">Uplink optional</p><h3>Keeps working offline</h3><p>Readings buffer locally and sync when the uplink comes back. Nothing goes silent.</p></article>
+        <article class="reveal"><p class="eyebrow">Sealed target</p><h3>Built for hard rooms</h3><p>Fanless and sealed for data halls, clean rooms and plant floors.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ENGINEERING ============ -->
+  <section class="content-band band-light-2 pillars-band" id="engineering">
+    <div class="band-inner split">
+      <div class="split-head sticky-head reveal">
+        <p class="eyebrow">Systems engineering</p>
+        <h2 class="display-soft">The enclosure, radios and rules carry the signal.</h2>
+        <p class="band-lede">Each pillar connects physical design to what happens on your floor.</p>
+      </div>
+      <ol class="pillars">
+        <li class="reveal"><span class="num">01</span><div><h3>Radio path</h3><p>Twin articulated antennas and a clear RF window keep links strong through racks, ducts and walls.</p><p class="pillar-note">Coverage starts with the body.</p></div></li>
+        <li class="reveal"><span class="num">02</span><div><h3>Local control</h3><p>Thresholds, interlocks and alarms execute on the gateway itself, in the same room as the failure.</p><p class="pillar-note">You shouldn't need the cloud to stop a fault.</p></div></li>
+        <li class="reveal"><span class="num">03</span><div><h3>Facility sealing</h3><p>The shell, ports and mounts are planned around dust, heat and cleaning cycles.</p><p class="pillar-note">Rugged without looking industrial.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============ MATERIALS / CONFIGURATOR ============ -->
+  <section class="content-band band-dark materials-band" id="materials" aria-labelledby="materials-title">
+    <div class="band-inner config">
+      <div class="config-panel">
+        <p class="eyebrow accent">03 / <span>Make it yours</span></p>
+        <h2 id="materials-title" class="display-soft">Three finishes.<br>One mesh body.</h2>
+        <p class="band-lede">Change the finish without changing the gateway's silhouette.</p>
+
+        <div class="finish-head"><span>Choose a finish</span><span>01 — 03</span></div>
+        <div class="finish-options" role="radiogroup" aria-label="Finish">
+          <label class="finish-option"><input type="radio" name="finish" value="graphite" checked><span class="swatch" style="--sw:#2a2a30"></span><span>Graphite</span></label>
+          <label class="finish-option"><input type="radio" name="finish" value="labwhite"><span class="swatch" style="--sw:#ecebe6"></span><span>Lab White</span></label>
+          <label class="finish-option"><input type="radio" name="finish" value="signal"><span class="swatch" style="--sw:#ff2e7e"></span><span>Signal Pink</span></label>
+        </div>
+        <p class="finish-desc" id="finish-desc">Graphite shell, matte black antennas and a soft status light. Disappears into racks and ceilings.</p>
+        <p class="finish-note">Finish visualization. The silhouette and antenna geometry stay true to the original model.</p>
+
+        <div class="buy-row">
+          <div>
+            <span class="buy-label">Gateways</span>
+            <div class="qty">
+              <button type="button" id="qty-dec" aria-label="Decrease quantity">−</button>
+              <output id="qty-val" aria-live="polite">1</output>
+              <button type="button" id="qty-inc" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+          <div class="buy-price">
+            <span class="buy-label">Pilot pricing</span>
+            <b>On request</b>
+            <span class="buy-sub">scoped per site</span>
+          </div>
+        </div>
+        <button type="button" class="commerce-button commerce-button-primary wide" id="add-to-bag">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7h12l-1 10H5L4 7Z"/><path d="M7.5 7V5.5a2.5 2.5 0 0 1 5 0V7"/></svg>
+          <span>Add to pilot kit</span><svg class="end" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </button>
+        <button type="button" class="commerce-button commerce-button-secondary wide" data-open-request>Preview pilot request</button>
+        <p class="finish-note">Pilot batch opens after site scoping.</p>
+        <p class="finish-note dim">Build your request here. Nothing is sent until you choose to email it.</p>
+      </div>
+
+      <div class="config-stage-wrap">
+        <div class="stage config-stage" id="config-stage" tabindex="0" role="img"
+             aria-label="SURDS G1 in the selected finish. Use the arrow keys or drag to turn it.">
+          <canvas class="stage-canvas"></canvas>
+          <div class="stage-controls floating" data-stage="config">
+            <button type="button" class="stage-control" data-turn="-1" aria-label="Rotate product left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 9a6 6 0 1 1 1.8 5.2"/><path d="M5 4v5h5"/></svg></button>
+            <button type="button" class="stage-control stage-control-reset" data-reset aria-label="Reset view">Reset</button>
+            <button type="button" class="stage-control" data-turn="1" aria-label="Rotate product right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15 9a6 6 0 1 0-1.8 5.2"/><path d="M15 4v5h-5"/></svg></button>
+          </div>
+        </div>
+        <div class="stage-caption"><span>SURDS G1</span><span id="finish-caption">Graphite</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SPECIFICATIONS ============ -->
+  <section class="content-band band-dark-2 specs-band" id="specifications">
+    <div class="band-inner split">
+      <div class="split-head reveal">
+        <p class="eyebrow accent">04 / <span>Specifications</span></p>
+        <h2 class="display-soft">The details.<br>Without the noise.</h2>
+        <p class="band-lede">Explore the radio, compute and physical construction.</p>
+        <p class="spec-disclaimer">Specification targets. Final figures are confirmed with you during pilot scoping.</p>
+      </div>
+      <div class="accordion" id="spec-accordion">
+        <div class="acc-item is-open">
+          <h3><button type="button" aria-expanded="true"><span class="num">01</span>Radio<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h3>
+          <dl>
+            <div><dt>Antennas</dt><dd>Dual external, articulated</dd></div>
+            <div><dt>Topology</dt><dd>Self-forming, self-healing mesh</dd></div>
+            <div><dt>Sensor link</dt><dd>Native SURDS sensor network</dd></div>
+          </dl>
+        </div>
+        <div class="acc-item">
+          <h3><button type="button" aria-expanded="false"><span class="num">02</span>Compute<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h3>
+          <dl>
+            <div><dt>Rules engine</dt><dd>Runs locally on the gateway</dd></div>
+            <div><dt>Offline mode</dt><dd>Buffers and syncs on reconnect</dd></div>
+            <div><dt>Integrations</dt><dd>Scoped per facility</dd></div>
+          </dl>
+        </div>
+        <div class="acc-item">
+          <h3><button type="button" aria-expanded="false"><span class="num">03</span>Body<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h3>
+          <dl>
+            <div><dt>Enclosure</dt><dd>Low-profile sealed shell</dd></div>
+            <div><dt>Cooling</dt><dd>Fanless</dd></div>
+            <div><dt>Mounting</dt><dd>Wall, rack or ceiling</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ QUALITIES ============ -->
+  <section class="content-band band-light qualities-band" id="qualities">
+    <div class="band-inner">
+      <div class="qualities-head reveal">
+        <p class="eyebrow accent">05 / <span>In every detail</span></p>
+        <h2 class="display-soft">Made to disappear.<br>Built to report.</h2>
+        <p class="band-lede">From the antenna array to the mounting face, each detail has a purpose.</p>
+      </div>
+      <div class="gallery">
+        <figure class="reveal"><div class="shot"><img data-shot="0" alt="SURDS G1 antenna array, close view"></div><figcaption><span class="num">01</span><h3>Antenna array</h3><p>Two articulated antennas tune coverage to the room.</p></figcaption></figure>
+        <figure class="reveal"><div class="shot"><img data-shot="1" alt="SURDS G1 enclosure in profile"></div><figcaption><span class="num">02</span><h3>Enclosure profile</h3><p>A low shell that reads as part of the ceiling, not a box on it.</p></figcaption></figure>
+        <figure class="reveal"><div class="shot"><img data-shot="2" alt="SURDS G1 from above at a diagonal"></div><figcaption><span class="num">03</span><h3>Mesh stance</h3><p>A diagonal stance echoes how the mesh fans out across a floor.</p></figcaption></figure>
+      </div>
+      <div class="quality-panels">
+        <article class="quality-panel reveal"><h3>Construction</h3><p>A continuous shell hides seams and fasteners.</p><p class="pillar-note">One body, no visual noise.</p></article>
+        <article class="quality-panel reveal"><h3>Install</h3><p>Mounts in minutes and joins the mesh on power-up.</p><p class="pillar-note">No site survey software required.</p></article>
+        <article class="quality-panel reveal"><h3>Resilience</h3><p>Local buffering and mesh rerouting handle the bad days.</p><p class="pillar-note">Quiet when things go wrong.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SUBSCRIBE ============ -->
+  <section class="content-band band-light-2 subscribe-band" id="subscribe">
+    <div class="band-inner split">
+      <div class="reveal">
+        <p class="eyebrow">Updates</p>
+        <h2 class="display-soft">Join the SURDS pilot briefing.</h2>
+        <p class="band-lede">Receive pilot timing, deployment notes and field results.</p>
+      </div>
+      <form class="newsletter-form reveal" id="newsletter-form" aria-label="Pilot briefing sign-up">
+        <label for="newsletter-email">Email</label>
+        <div class="newsletter-row">
+          <input id="newsletter-email" name="email" type="email" placeholder="you@company.com" required autocomplete="email">
+          <button type="submit" class="commerce-button commerce-button-dark">Join briefing</button>
+        </div>
+        <p class="finish-note">Opens an email to hello@surds.in. Nothing is stored on this page.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ FINAL CTA ============ -->
+  <section class="final-preorder band-dark" id="final-preorder">
+    <div class="band-inner final">
+      <div class="stage final-stage" id="final-stage" tabindex="0" role="img"
+           aria-label="SURDS G1. Use the arrow keys or drag to turn it.">
+        <canvas class="stage-canvas"></canvas>
+        <div class="stage-controls floating" data-stage="final">
+          <button type="button" class="stage-control" data-turn="-1" aria-label="Rotate product left"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 9a6 6 0 1 1 1.8 5.2"/><path d="M5 4v5h5"/></svg></button>
+          <button type="button" class="stage-control stage-control-reset" data-reset aria-label="Reset view">Reset</button>
+          <button type="button" class="stage-control" data-turn="1" aria-label="Rotate product right"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M15 9a6 6 0 1 0-1.8 5.2"/><path d="M15 4v5h-5"/></svg></button>
+        </div>
+      </div>
+      <div class="final-copy reveal">
+        <p class="eyebrow">SURDS G1 / Your next facility</p>
+        <h2 class="display">READY TO HOLD IT<br>ON TARGET?</h2>
+        <p class="band-lede">Pick a finish. Scope a pilot. Start with one room.</p>
+        <div class="final-price"><span class="buy-label">Pilot pricing</span><b>On request</b></div>
+        <p class="final-summary"><span class="dot" id="final-dot"></span><span id="final-summary">Graphite / Qty 1</span><a href="#materials">Change</a></p>
+        <div class="hero-ctas">
+          <button type="button" class="commerce-button commerce-button-primary" data-open-request>Request a pilot <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M5.5 4H12v6.5"/></svg></button>
+          <a href="#subscribe" class="text-button">Get pilot updates</a>
+        </div>
+        <p class="finish-note dim">Pilot-first engagement. NDA on request. Response in 2 business days.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Sticky buy bar -->
+<div class="buy-bar" id="buy-bar" aria-hidden="true">
+  <span class="dot" id="bar-dot"></span>
+  <div class="buy-bar-id"><b>SURDS G1</b><span id="bar-finish">Graphite</span></div>
+  <div class="buy-bar-price"><b>On request</b><span>Pilot pricing</span></div>
+  <a href="#materials" class="buy-bar-change">Change finish <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M5.5 4H12v6.5"/></svg></a>
+  <button type="button" class="commerce-button commerce-button-primary small" id="bar-add"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7h12l-1 10H5L4 7Z"/><path d="M7.5 7V5.5a2.5 2.5 0 0 1 5 0V7"/></svg>Add to kit</button>
+</div>
+
+<!-- Pilot kit drawer -->
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="bag-drawer" aria-label="Pilot kit" aria-hidden="true">
+  <div class="drawer-head"><h2>Pilot kit</h2><button type="button" class="icon-button" data-close aria-label="Close pilot kit"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg></button></div>
+  <ul class="bag-list" id="bag-list"></ul>
+  <p class="bag-empty" id="bag-empty">Your pilot kit is empty. Choose a finish to get started.</p>
+  <div class="drawer-foot">
+    <p class="finish-note">Saved in this browser only.</p>
+    <button type="button" class="commerce-button commerce-button-primary wide" data-open-request>Preview pilot request</button>
+  </div>
+</aside>
+
+<!-- Pilot request modal -->
+<div class="modal" id="request-modal" role="dialog" aria-modal="true" aria-labelledby="request-title" hidden>
+  <div class="modal-card">
+    <button type="button" class="icon-button modal-close" data-close aria-label="Close"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg></button>
+    <p class="eyebrow accent">Pilot request</p>
+    <h2 id="request-title" class="display-soft">Scope a pilot.</h2>
+    <p class="band-lede">Tell us about the site. This opens an email to hello@surds.in with your kit listed in it. Nothing is sent from this page.</p>
+    <form id="request-form">
+      <label>Name<input name="name" required autocomplete="name"></label>
+      <label>Company<input name="company" required autocomplete="organization"></label>
+      <label>Facility type
+        <select name="facility">
+          <option>Data center</option><option>Clean room</option><option>Building &amp; HVAC</option><option>Manufacturing</option><option>Other</option>
+        </select>
+      </label>
+      <label>What does failure cost you?<textarea name="notes" rows="3" placeholder="Optional"></textarea></label>
+      <p class="request-kit" id="request-kit"></p>
+      <button type="submit" class="commerce-button commerce-button-primary wide">Open email draft</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<footer class="site-footer" id="footer">
+  <div class="band-inner">
+    <div class="footer-top">
+      <a class="footer-brand" href="#top"><b>SURDS</b><span>G1 / Intelligence that stays on site.</span></a>
+      <nav aria-label="Footer navigation">
+        <a href="#promise">The idea</a><a href="#engineering">Design</a><a href="#materials">Finishes</a><a href="#specifications">Specifications</a><a href="/">SURDS home</a>
+      </nav>
+    </div>
+    <div class="footer-legal">
+      <section><h2>Privacy</h2><p>Your pilot kit is saved locally in this browser when storage is available. Form entries are only used to build an email draft on your device; this page sends nothing.</p></section>
+      <section><h2>Terms</h2><p>SURDS G1 product preview. Specifications are targets confirmed during pilot scoping. No payment, order or shipment is created on this page.</p></section>
+    </div>
+    <div class="footer-bottom"><span>© 2026 SURDS Technologies Private Limited</span><a href="#top">Back to top ↑</a></div>
+  </div>
+  <div class="footer-word" aria-hidden="true">SURDS</div>
+</footer>
+
+</body>
+</html>

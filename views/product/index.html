@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SURDS Thermal | Thermal sensor with IR blaster</title>
+<meta name="description" content="SURDS Thermal is a wall-mounted thermal sensor with an IR blaster. It sees heat across a room, senses motion and presence, and sends IR commands to your AC, all without ever capturing a face.">
+<link rel="icon" href="/shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/shared/fonts.css">
+<link rel="stylesheet" href="/views/product/product.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+<script type="module" src="/views/product/product.js"></script>
+</head>
+<body>
+
+<!-- One ember background for the whole site, and one sensor that travels down it. -->
+<div class="site-bg" aria-hidden="true"></div>
+<div class="under-layer" id="under-layer" aria-hidden="true">
+  <div class="ghost-word" id="ghost-hero">THERMAL</div>
+  <div class="hero-ring" id="hero-ring"></div>
+  <div class="ghost-word" id="ghost-final">THERMAL</div>
+</div>
+<canvas class="product-layer" id="product-layer" aria-hidden="true"></canvas>
+<div class="hotspots" id="hotspots" aria-hidden="true">
+  <span data-hs="lens">1</span><span data-hs="light">2</span><span data-hs="ir">3</span><span data-hs="grille">4</span><span data-hs="mount">5</span>
+</div>
+
+<div class="loader" id="loader" aria-hidden="true">
+  <span class="loader-brand">THERMAL</span>
+  <span class="loader-text">Warming up the sensor</span>
+  <span class="loader-bar"><i id="loader-fill"></i></span>
+</div>
+
+<a class="skip-link" href="#main-content">Skip to main content</a>
+
+<header class="site-header" id="site-header">
+  <a href="#top" class="brand-lockup" aria-label="SURDS Thermal: back to top">
+    <span class="brand-word">SURDS</span>
+    <span class="brand-model">THERMAL</span>
+  </a>
+  <nav class="desktop-nav" aria-label="Product sections">
+    <a href="#see" data-nav="see">How it works</a>
+    <a href="#demo" data-nav="demo">Live demo</a>
+    <a href="#anatomy" data-nav="anatomy">Anatomy</a>
+    <a href="#uses" data-nav="uses">Use cases</a>
+    <a href="#specs" data-nav="specs">Specs</a>
+  </nav>
+  <div class="header-actions">
+    <button type="button" class="header-cta" data-open-request>Request a pilot <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M5.5 4H12v6.5"/></svg></button>
+    <button class="icon-button bag-button" id="bag-button" type="button" aria-label="Open pilot kit, 0 items">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7h12l-1 10H5L4 7Z"/><path d="M7.5 7V5.5a2.5 2.5 0 0 1 5 0V7"/></svg>
+      <span class="bag-count" id="bag-count" hidden>0</span>
+    </button>
+    <button class="icon-button mobile-menu-button" id="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h14M3 13h14"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="mobile-nav" id="mobile-nav" hidden>
+  <a href="#see">How it works</a>
+  <a href="#demo">Live demo</a>
+  <a href="#anatomy">Anatomy</a>
+  <a href="#uses">Use cases</a>
+  <a href="#specs">Specs</a>
+  <a href="#faq">FAQ</a>
+</div>
+
+<main id="main-content">
+
+  <!-- ================= HERO ================= -->
+  <section class="hero" id="top" aria-label="SURDS Thermal">
+    <div class="hero-grid">
+      <div class="slot slot-hero" data-slot="hero" data-yaw="0.57" data-pitch="0.1"></div>
+      <div class="hero-copy">
+        <p class="kicker">Sensor systems</p>
+        <h1>Thermal sensor with IR blaster</h1>
+        <p class="lede">Sees heat across a room, senses motion, and sends IR commands.</p>
+        <a href="#finishes" class="pill" data-finish-label>Orange + dark glass</a>
+      </div>
+    </div>
+    <a href="#see" class="scroll-hint">Scroll. The sensor walks you through it. <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M4 9l4 4 4-4"/></svg></a>
+  </section>
+
+  <!-- ================= STORY: the sensor slides alongside ================= -->
+  <section class="story" id="see">
+    <div class="inner story-grid">
+      <div class="story-copy reveal">
+        <p class="kicker"><span class="step">01</span> See</p>
+        <h2>Reads heat, not faces.</h2>
+        <p class="lede">The thermal lens measures the temperature of everything in view: people, machines, windows, the air from a vent.</p>
+        <ul class="facts">
+          <li><b>Every surface reports a temperature,</b> from a 22°C wall to a 60°C charger.</li>
+          <li><b>Works in the dark.</b> Heat doesn't need light to be seen.</li>
+          <li><b>A grid of numbers,</b> never a photograph.</li>
+        </ul>
+      </div>
+      <div class="slot" data-slot="see" data-yaw="0.52" data-pitch="0.08" data-glow="1" data-fov="1"></div>
+    </div>
+  </section>
+
+  <section class="story flip" id="sense">
+    <div class="inner story-grid">
+      <div class="slot" data-slot="sense" data-yaw="0.57" data-pitch="0.12" data-glow="0.4"></div>
+      <div class="story-copy reveal">
+        <p class="kicker"><span class="step">02</span> Sense</p>
+        <h2>Knows who's in the room.</h2>
+        <p class="lede">Body heat stands out clearly against a room, so the sensor knows how many people are there and where they're moving.</p>
+        <ul class="facts">
+          <li><b>Counts people</b> by their body heat, about 33°C at the skin.</li>
+          <li><b>Tracks movement</b> as warm shapes cross the room.</li>
+          <li><b>Notices a room emptying,</b> and how long it has been empty.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="story" id="act">
+    <div class="inner story-grid">
+      <div class="story-copy reveal">
+        <p class="kicker"><span class="step">03</span> Act</p>
+        <h2>Talks to your AC for you.</h2>
+        <p class="lede">The IR blaster sends the same signals as the remote in your drawer, so the ACs, fans and TVs you already own respond without rewiring.</p>
+        <ul class="facts">
+          <li><b>Learns the codes</b> from your existing remote.</li>
+          <li><b>Sends on, off, mode and setpoint,</b> like pressing the buttons yourself.</li>
+          <li><b>Logs every command</b> to the SURDS mesh, with the reason.</li>
+        </ul>
+      </div>
+      <div class="slot" data-slot="act" data-yaw="0.52" data-pitch="0.06" data-ir="1"></div>
+    </div>
+  </section>
+
+  <section class="story flip" id="trust">
+    <div class="inner story-grid">
+      <div class="slot" data-slot="trust" data-yaw="0.57" data-pitch="0.1"></div>
+      <div class="story-copy reveal">
+        <p class="kicker"><span class="step">04</span> Trust</p>
+        <h2>Anonymous by design.</h2>
+        <p class="lede">Low-resolution heat, processed on the device. It can't capture a face, so there's nothing personal to leak.</p>
+        <ul class="facts">
+          <li><b>No image sensor</b> that could record a face, a screen or a document.</li>
+          <li><b>Thinks on the device.</b> Counts and actions leave it; frames don't need to.</li>
+          <li><b>Readable rules.</b> You can always see why it did what it did.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ONE SENTENCE ================= -->
+  <section class="band" id="what">
+    <div class="inner">
+      <p class="eyebrow reveal">In one sentence</p>
+      <p class="statement reveal">A small box on your wall that <em>watches a room's heat</em>, works out <em>who's there and what's running hot</em>, and <em>tells your AC what to do</em>, without a camera ever seeing a face.</p>
+    </div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section class="band" id="how">
+    <div class="inner">
+      <div class="section-head reveal">
+        <p class="eyebrow">The decision loop</p>
+        <h2 class="h-display">Sense. Decide. Act.<br>Every second, on the device.</h2>
+        <p class="sub">Nothing is streamed to a cloud to be interpreted. The sensor does the thinking where the heat is.</p>
+      </div>
+      <ol class="loop">
+        <li class="glass reveal">
+          <div class="loop-art" aria-hidden="true">
+            <svg viewBox="0 0 160 100"><defs><radialGradient id="g1"><stop offset="0" stop-color="#ffe9a8"/><stop offset=".5" stop-color="#f26a1b"/><stop offset="1" stop-color="#3a0d2e"/></radialGradient></defs><rect x="8" y="10" width="144" height="80" rx="10" fill="#273F4F"/><circle cx="55" cy="52" r="20" fill="url(#g1)"/><circle cx="108" cy="44" r="14" fill="url(#g1)" opacity=".8"/></svg>
+          </div>
+          <span class="loop-n">1</span>
+          <h3>Sense</h3>
+          <p>The thermal lens takes a fresh reading of the room: a grid of temperatures.</p>
+          <p class="loop-out">Out: “2 warm bodies, desk 3 and 5. Room 27.4°C.”</p>
+        </li>
+        <li class="glass reveal">
+          <div class="loop-art" aria-hidden="true">
+            <svg viewBox="0 0 160 100"><rect x="8" y="10" width="144" height="80" rx="10" fill="#273F4F"/><text x="20" y="38" fill="#ffd08a" font-family="monospace" font-size="11">if people &gt; 0</text><text x="20" y="56" fill="#ffd08a" font-family="monospace" font-size="11"> and room &gt; target</text><text x="20" y="74" fill="#fff" font-family="monospace" font-size="11">→ cool to target</text></svg>
+          </div>
+          <span class="loop-n">2</span>
+          <h3>Decide</h3>
+          <p>Simple rules you can read run on the sensor itself. They keep working when the internet doesn't.</p>
+          <p class="loop-out">Out: “Occupied and 3.4°C over target. Start cooling.”</p>
+        </li>
+        <li class="glass reveal">
+          <div class="loop-art" aria-hidden="true">
+            <svg viewBox="0 0 160 100"><rect x="8" y="10" width="144" height="80" rx="10" fill="#273F4F"/><rect x="20" y="40" width="26" height="20" rx="6" fill="#FE7743"/><path d="M54 50h60" stroke="#fff" stroke-width="3" stroke-dasharray="6 6" fill="none"/><rect x="118" y="38" width="30" height="24" rx="4" fill="#fff"/><text x="133" y="54" text-anchor="middle" font-size="9" font-family="sans-serif" fill="#2a120b">AC</text></svg>
+          </div>
+          <span class="loop-n">3</span>
+          <h3>Act</h3>
+          <p>It fires the IR command at the AC, and reports what it did to the SURDS mesh so your team sees every action.</p>
+          <p class="loop-out">Out: “IR → AC: COOL 24°C.” and a log line on your dashboard.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ================= LIVE DEMO ================= -->
+  <section class="band" id="demo">
+    <div class="inner">
+      <div class="section-head reveal">
+        <p class="eyebrow">Live demo · try it</p>
+        <h2 class="h-display">This is what the sensor sees.</h2>
+        <p class="sub">A small office from above, in heat. Change the room and watch the sensor decide on its own. One second here is one minute in the room.</p>
+      </div>
+
+      <div class="demo" id="thermal-demo">
+        <div class="demo-view">
+          <canvas aria-label="Simulated thermal view of an office from above"></canvas>
+          <div class="demo-legend" aria-hidden="true"><span>16°C</span><i></i><span>38°C</span></div>
+          <div class="demo-clock" aria-hidden="true">Room time <b data-demo="clock">09:00</b></div>
+        </div>
+
+        <div class="demo-side">
+          <div class="readouts">
+            <div class="glass"><span>People</span><b data-demo="occupancy">0</b></div>
+            <div class="glass"><span>Room</span><b data-demo="avg">–</b></div>
+            <div class="glass"><span>Hottest point</span><b data-demo="hot">–</b></div>
+            <div class="glass"><span>AC</span><b data-demo="ac" data-on="false">Off</b></div>
+          </div>
+          <p class="reason"><span>Sensor is thinking</span><b data-demo="reason">…</b></p>
+
+          <div class="controls glass">
+            <label class="ctl">
+              <span>People in the room <b data-demo="peopleVal">3</b></span>
+              <input type="range" min="0" max="6" step="1" value="3" data-demo="people">
+            </label>
+            <label class="ctl">
+              <span>Comfort target <b data-demo="targetVal">24°C</b></span>
+              <input type="range" min="21" max="27" step="1" value="24" data-demo="target">
+            </label>
+            <div class="ctl">
+              <span>Weather outside</span>
+              <div class="seg" role="group" aria-label="Weather outside">
+                <button type="button" data-outside="28" aria-pressed="false">Mild</button>
+                <button type="button" data-outside="34" aria-pressed="true">Hot</button>
+                <button type="button" data-outside="41" aria-pressed="false">Heatwave</button>
+              </div>
+            </div>
+            <div class="toggles">
+              <label class="tog"><input type="checkbox" checked data-demo="auto"><span></span>Auto control</label>
+              <label class="tog"><input type="checkbox" checked data-demo="detections"><span></span>Show detections</label>
+              <label class="tog"><input type="checkbox" data-demo="raw"><span></span>Raw sensor pixels</label>
+            </div>
+            <button type="button" class="ghost-btn" data-demo="rack" aria-pressed="false">Add hot equipment</button>
+          </div>
+
+          <div class="log-wrap glass">
+            <p class="log-title">What it did</p>
+            <ol class="log" data-demo="log"><li class="log-empty"><span>Nothing yet. Give it a moment, or add people.</span></li></ol>
+          </div>
+        </div>
+      </div>
+      <p class="demo-note">Simulation for explanation. Real readings, ranges and response times are confirmed during your pilot.</p>
+    </div>
+  </section>
+
+  <!-- ================= ANATOMY ================= -->
+  <section class="band" id="anatomy">
+    <div class="inner anatomy">
+      <div class="anatomy-copy">
+        <p class="eyebrow">Anatomy</p>
+        <h2 class="h-display">Every part has<br>one job.</h2>
+        <p class="sub">Tap a part to find it on the sensor.</p>
+        <ol class="parts" id="parts">
+          <li><button type="button" data-part="lens" class="is-active"><span>1</span><b>Thermal lens</b><em>Reads the temperature of everything in view as a low-resolution grid.</em></button></li>
+          <li><button type="button" data-part="light"><span>2</span><b>Pinhole sensor</b><em>Reads ambient light, useful for “empty room, lights left on”.</em></button></li>
+          <li><button type="button" data-part="ir"><span>3</span><b>IR blaster, behind the glass</b><em>Infrared passes straight through the dark face, so the emitters need no openings.</em></button></li>
+          <li><button type="button" data-part="grille"><span>4</span><b>Side grille</b><em>Lets the electronics breathe so their own heat never skews a reading.</em></button></li>
+          <li><button type="button" data-part="mount"><span>5</span><b>Wall plate</b><em>Two screws hold it to a wall or ceiling; the sensor clicks onto it, angled into the room.</em></button></li>
+        </ol>
+      </div>
+      <div class="slot slot-anatomy" data-slot="anatomy" data-yaw="0.40" data-pitch="0.02" data-hotspots="1"></div>
+    </div>
+  </section>
+
+  <!-- ================= USE CASES ================= -->
+  <section class="band" id="uses">
+    <div class="inner">
+      <div class="section-head reveal">
+        <p class="eyebrow">Where it works</p>
+        <h2 class="h-display">One sensor, five rooms<br>that waste less.</h2>
+      </div>
+      <div class="use-grid">
+        <article class="use glass reveal"><span class="use-tag">Offices</span><h3>AC follows the people</h3><p>Meeting rooms cool when people arrive and stop when they leave, not on a timer.</p><p class="use-what"><b>Uses</b> presence · IR</p></article>
+        <article class="use glass reveal"><span class="use-tag">Data centers</span><h3>Hot spots, before alarms</h3><p>Sees a rack running hot across the aisle and flags it to the SURDS mesh long before a thermostat would.</p><p class="use-what"><b>Uses</b> heat map · alerts</p></article>
+        <article class="use glass reveal"><span class="use-tag">Clean rooms</span><h3>Count without contact</h3><p>Occupancy and heat load without cameras in a controlled space, so nothing new has to be cleared for privacy.</p><p class="use-what"><b>Uses</b> presence · heat map</p></article>
+        <article class="use glass reveal"><span class="use-tag">Retail</span><h3>Footfall, anonymously</h3><p>Where people stop, how long they stay and when the floor gets crowded. Heat blobs, never shoppers' faces.</p><p class="use-what"><b>Uses</b> presence · dwell</p></article>
+        <article class="use glass reveal"><span class="use-tag">Hotels &amp; homes</span><h3>Old ACs, smart behaviour</h3><p>Any AC with a remote becomes occupancy-aware. Nothing to replace, nothing to rewire.</p><p class="use-what"><b>Uses</b> presence · IR</p></article>
+        <article class="use use-cta reveal"><h3>Your room isn't listed?</h3><p>Tell us what failure or waste costs you. We scope a pilot around it.</p><button type="button" class="pill" data-open-request>Talk to us</button></article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PRIVACY ================= -->
+  <section class="band" id="privacy">
+    <div class="inner">
+      <div class="section-head reveal">
+        <p class="eyebrow">Privacy</p>
+        <h2 class="h-display">It sees heat.<br>Not people.</h2>
+        <p class="sub">Most “smart” sensors are cameras with software on top. This one physically can't take a picture.</p>
+      </div>
+      <div class="compare reveal">
+        <figure class="compare-card glass">
+          <div class="compare-art" aria-hidden="true">
+            <svg viewBox="0 0 200 130"><rect width="200" height="130" rx="8" fill="#273F4F"/><circle cx="70" cy="52" r="16" fill="#8fa3b0"/><rect x="50" y="70" width="40" height="44" rx="12" fill="#8fa3b0"/><circle cx="64" cy="49" r="2" fill="#273F4F"/><circle cx="76" cy="49" r="2" fill="#273F4F"/><path d="M64 58q6 4 12 0" stroke="#3a1d14" stroke-width="2" fill="none"/><circle cx="140" cy="56" r="14" fill="#8fa3b0"/><rect x="122" y="72" width="36" height="42" rx="12" fill="#8fa3b0"/><path d="M8 8h184v114H8z" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="8 6"/></svg>
+          </div>
+          <figcaption><b>A camera</b> sees faces, screens, documents and whoever walked past. All of it can be stored, leaked or subpoenaed.</figcaption>
+        </figure>
+        <figure class="compare-card glass good">
+          <div class="compare-art" aria-hidden="true">
+            <svg viewBox="0 0 200 130"><defs><radialGradient id="g2"><stop offset="0" stop-color="#fff2b8"/><stop offset=".45" stop-color="#f26a1b"/><stop offset="1" stop-color="#2a0a4a" stop-opacity="0"/></radialGradient></defs><rect width="200" height="130" rx="8" fill="#140a2a"/><ellipse cx="70" cy="72" rx="30" ry="40" fill="url(#g2)"/><ellipse cx="140" cy="74" rx="28" ry="38" fill="url(#g2)"/><g stroke="#000" stroke-opacity=".25">
+              <path d="M0 16h200M0 32h200M0 48h200M0 64h200M0 80h200M0 96h200M0 112h200M25 0v130M50 0v130M75 0v130M100 0v130M125 0v130M150 0v130M175 0v130"/></g></svg>
+          </div>
+          <figcaption><b>SURDS Thermal</b> sees two warm shapes in a coarse grid of temperatures. There is no face in the data to begin with.</figcaption>
+        </figure>
+      </div>
+      <ul class="privacy-points">
+        <li class="reveal"><b>No image sensor.</b> The thermal array is low resolution by design. Faces and text don't exist in its output.</li>
+        <li class="reveal"><b>Processed on the device.</b> Counts, temperatures and actions leave the sensor. Raw frames don't need to.</li>
+        <li class="reveal"><b>Readable rules.</b> You can see exactly why it switched something on or off. No black box.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ================= FINISHES ================= -->
+  <section class="band" id="finishes" aria-labelledby="finishes-title">
+    <div class="inner config">
+      <div class="config-panel">
+        <p class="eyebrow">Make it yours</p>
+        <h2 id="finishes-title" class="h-display">Three shells.<br>One dark glass face.</h2>
+        <p class="sub">The optics never change. Pick the shell that suits the wall.</p>
+        <div class="finish-options" role="radiogroup" aria-label="Finish">
+          <label class="finish-option"><input type="radio" name="finish" value="ember" checked><span class="swatch" style="--sw:#FE7743"></span><span>Orange</span></label>
+          <label class="finish-option"><input type="radio" name="finish" value="navy"><span class="swatch" style="--sw:#273F4F"></span><span>Navy</span></label>
+          <label class="finish-option"><input type="radio" name="finish" value="chalk"><span class="swatch" style="--sw:#EFEEEA"></span><span>Chalk</span></label>
+        </div>
+        <p class="finish-desc" id="finish-desc">Orange shell, dark glass face. Meant to be seen: people know the room is heat-aware.</p>
+        <div class="buy-row">
+          <div>
+            <span class="buy-label">Sensors</span>
+            <div class="qty">
+              <button type="button" id="qty-dec" aria-label="Decrease quantity">−</button>
+              <output id="qty-val" aria-live="polite">1</output>
+              <button type="button" id="qty-inc" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+          <div class="buy-price"><span class="buy-label">Pilot pricing</span><b>On request</b><span class="buy-sub">scoped per site</span></div>
+        </div>
+        <button type="button" class="btn btn-light wide" id="add-to-bag">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7h12l-1 10H5L4 7Z"/><path d="M7.5 7V5.5a2.5 2.5 0 0 1 5 0V7"/></svg>
+          <span>Add to pilot kit</span><svg class="end" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+        </button>
+        <button type="button" class="btn btn-outline wide" data-open-request>Request a pilot</button>
+        <p class="note">Rule of thumb: one sensor per room, or one per 40 m² of open floor. We confirm coverage on site.</p>
+      </div>
+      <div class="config-stage-wrap">
+        <div class="slot slot-config" data-slot="finishes" data-yaw="0.47" data-pitch="0.08"></div>
+        <div class="stage-caption"><span>SURDS Thermal</span><span id="finish-caption">Orange + dark glass</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= INSTALL ================= -->
+  <section class="band" id="install">
+    <div class="inner">
+      <div class="section-head reveal">
+        <p class="eyebrow">Setup</p>
+        <h2 class="h-display">Up and running<br>in three steps.</h2>
+      </div>
+      <ol class="steps">
+        <li class="reveal"><span class="step-n">1</span><h3>Mount it</h3><p>Screw the wall plate high on a wall or ceiling with a clear view of the room, then click the sensor onto it.</p></li>
+        <li class="reveal"><span class="step-n">2</span><h3>Power it</h3><p>Plug it in. It joins the SURDS mesh by itself and shows up on your dashboard. No app pairing dance.</p></li>
+        <li class="reveal"><span class="step-n">3</span><h3>Point the remote</h3><p>Press a button on your AC remote at the sensor once so it learns the codes. From then on, it can press them for you.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ================= SPECS ================= -->
+  <section class="band" id="specs">
+    <div class="inner split">
+      <div class="section-head reveal">
+        <p class="eyebrow">Specifications</p>
+        <h2 class="h-display">The details.</h2>
+        <p class="disclaimer">Specification targets. Exact figures are confirmed with you during pilot scoping.</p>
+      </div>
+      <div class="accordion" id="spec-accordion">
+        <div class="acc-item is-open">
+          <h3><button type="button" aria-expanded="true"><span class="num">01</span>Sensing<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h3>
+          <dl>
+            <div><dt>Thermal</dt><dd>Low-resolution thermal array, room-wide view</dd></div>
+            <div><dt>Presence</dt><dd>Count, position and movement</dd></div>
+            <div><dt>Ambient</dt><dd>Light level</dd></div>
+          </dl>
+        </div>
+        <div class="acc-item">
+          <h3><button type="button" aria-expanded="false"><span class="num">02</span>Control<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h3>
+          <dl>
+            <div><dt>IR blaster</dt><dd>Multi-emitter, wide spread</dd></div>
+            <div><dt>Targets</dt><dd>ACs, fans, TVs with IR remotes</dd></div>
+            <div><dt>Learning</dt><dd>Learns codes from your existing remote</dd></div>
+            <div><dt>Rules</dt><dd>Run on the device, work offline</dd></div>
+          </dl>
+        </div>
+        <div class="acc-item">
+          <h3><button type="button" aria-expanded="false"><span class="num">03</span>Connectivity<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h3>
+          <dl>
+            <div><dt>Network</dt><dd>Joins the self-healing SURDS sensor mesh</dd></div>
+            <div><dt>Reports</dt><dd>Counts, temperatures, actions, alerts</dd></div>
+            <div><dt>Never sends</dt><dd>Images. There are none.</dd></div>
+          </dl>
+        </div>
+        <div class="acc-item">
+          <h3><button type="button" aria-expanded="false"><span class="num">04</span>Body<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button></h3>
+          <dl>
+            <div><dt>Shell</dt><dd>Orange, Navy or Chalk</dd></div>
+            <div><dt>Face</dt><dd>Dark glass: one lens, one pinhole</dd></div>
+            <div><dt>Mount</dt><dd>Two-screw wall plate, wall or ceiling</dd></div>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FAQ ================= -->
+  <section class="band" id="faq">
+    <div class="inner split">
+      <div class="section-head reveal">
+        <p class="eyebrow">Questions</p>
+        <h2 class="h-display">Asked before<br>every pilot.</h2>
+      </div>
+      <div class="faq">
+        <details class="reveal" open><summary>Is it a camera?</summary><p>No. It has a thermal array that reports a coarse grid of temperatures. There's no image sensor that could capture a face, a screen or a document.</p></details>
+        <details class="reveal"><summary>What can it control?</summary><p>Anything that takes an infrared remote: most split and window ACs, many fans, heaters and TVs. If your remote has to point at it, the sensor can too.</p></details>
+        <details class="reveal"><summary>Does it need the internet?</summary><p>No. Sensing and rules run on the device, so a room keeps behaving when the connection drops. The SURDS mesh is how it reports and how you change its rules.</p></details>
+        <details class="reveal"><summary>Where should I mount it?</summary><p>High on a wall or on the ceiling, facing the area people use, with a clear line of sight to the AC for the IR blaster.</p></details>
+        <details class="reveal"><summary>How many do I need?</summary><p>Usually one per room. Open floors need roughly one per 40 m². We map it with you during pilot scoping.</p></details>
+        <details class="reveal"><summary>Can it tell who someone is?</summary><p>No. It knows a warm body is there and roughly where. Identity isn't in the data, so it can't be inferred later either.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FINAL ================= -->
+  <section class="final" id="final">
+    <div class="inner final-inner">
+      <div class="slot slot-final" data-slot="final" data-yaw="0.57" data-pitch="0.1"></div>
+      <div class="final-copy reveal">
+        <p class="kicker">SURDS Thermal · Pilot</p>
+        <h2>Put one room on heat sense.</h2>
+        <p class="lede">Start with the room that wastes the most. We'll show you what it saw and what it did.</p>
+        <p class="final-summary"><span class="dot" id="final-dot"></span><span id="final-summary">Orange + dark glass / Qty 1</span><a href="#finishes">Change</a></p>
+        <div class="final-ctas">
+          <button type="button" class="pill big" data-open-request>Request a pilot <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M5.5 4H12v6.5"/></svg></button>
+          <a href="#demo" class="hero-link">Try the demo again</a>
+        </div>
+        <p class="note">Pilot-first engagement. NDA on request. Response in 2 business days.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="buy-bar" id="buy-bar" aria-hidden="true">
+  <span class="dot" id="bar-dot"></span>
+  <div class="buy-bar-id"><b>SURDS Thermal</b><span id="bar-finish">Orange + dark glass</span></div>
+  <div class="buy-bar-price"><b>On request</b><span>Pilot pricing</span></div>
+  <a href="#finishes" class="buy-bar-change">Change finish</a>
+  <button type="button" class="btn btn-light small" id="bar-add"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7h12l-1 10H5L4 7Z"/><path d="M7.5 7V5.5a2.5 2.5 0 0 1 5 0V7"/></svg>Add to kit</button>
+</div>
+
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="bag-drawer" aria-label="Pilot kit" aria-hidden="true">
+  <div class="drawer-head"><h2>Pilot kit</h2><button type="button" class="icon-button" data-close aria-label="Close pilot kit"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg></button></div>
+  <ul class="bag-list" id="bag-list"></ul>
+  <p class="bag-empty" id="bag-empty">Your pilot kit is empty. Pick a finish to get started.</p>
+  <div class="drawer-foot">
+    <p class="note">Saved in this browser only.</p>
+    <button type="button" class="btn btn-light wide" data-open-request>Request a pilot</button>
+  </div>
+</aside>
+
+<div class="modal" id="request-modal" role="dialog" aria-modal="true" aria-labelledby="request-title" hidden>
+  <div class="modal-card">
+    <button type="button" class="icon-button modal-close" data-close aria-label="Close"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"/></svg></button>
+    <p class="eyebrow">Pilot request</p>
+    <h2 id="request-title">Tell us about the room.</h2>
+    <p class="sub">This opens an email to hello@surds.in with your answers and kit filled in. Nothing is sent from this page.</p>
+    <form id="request-form">
+      <label>Name<input name="name" required autocomplete="name"></label>
+      <label>Company<input name="company" required autocomplete="organization"></label>
+      <label>Room type
+        <select name="facility"><option>Office / meeting rooms</option><option>Data center</option><option>Clean room</option><option>Retail floor</option><option>Hotel / residential</option><option>Other</option></select>
+      </label>
+      <label>What do you want it to do?<textarea name="notes" rows="3" placeholder="e.g. switch ACs off in empty rooms"></textarea></label>
+      <p class="request-kit" id="request-kit"></p>
+      <button type="submit" class="btn btn-light wide">Open email draft</button>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<footer class="site-footer">
+  <div class="inner">
+    <div class="footer-top">
+      <a class="footer-brand" href="#top"><b>SURDS</b><span>Thermal · sees heat, senses motion, sends IR.</span></a>
+      <nav aria-label="Footer navigation"><a href="#see">How it works</a><a href="#demo">Live demo</a><a href="#anatomy">Anatomy</a><a href="#uses">Use cases</a><a href="#specs">Specs</a><a href="#faq">FAQ</a><a href="/">SURDS home</a></nav>
+    </div>
+    <div class="footer-legal">
+      <section><h2>Privacy</h2><p>Your pilot kit is saved locally in this browser when storage is available. Form entries only build an email draft on your device; this page sends nothing.</p></section>
+      <section><h2>Terms</h2><p>SURDS Thermal product preview. The live demo is a simulation for explanation. Specifications are targets confirmed during pilot scoping. No payment or order is created here.</p></section>
+    </div>
+    <div class="footer-bottom"><span>© 2026 SURDS Technologies Private Limited</span><a href="#top">Back to top ↑</a></div>
+  </div>
+</footer>
+
+</body>
+</html>
