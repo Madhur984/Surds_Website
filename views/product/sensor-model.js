@@ -15,15 +15,18 @@ import * as THREE from 'three';
 
 export var FINISHES = {
   // shells follow the site palette: #FE7743 orange, #273F4F navy, #EFEEEA chalk
-  ember: { name: 'Orange + dark glass', short: 'Orange', dot: '#FE7743', shell: '#FE7743', rough: 0.62, sheen: 0.08 },
-  navy:  { name: 'Navy + dark glass',   short: 'Navy',   dot: '#273F4F', shell: '#2c4758', rough: 0.58, sheen: 0.1 },
-  chalk: { name: 'Chalk + dark glass',  short: 'Chalk',  dot: '#EFEEEA', shell: '#e6e4de', rough: 0.62, sheen: 0.1 }
+  ember: { name: 'Red + dark glass',    short: 'Red',    dot: '#E5391C', shell: '#e0361a', rough: 0.68, sheen: 0.25 },
+  navy:  { name: 'Navy + dark glass',   short: 'Navy',   dot: '#273F4F', shell: '#2c4758', rough: 0.66, sheen: 0.2 },
+  chalk: { name: 'Chalk + dark glass',  short: 'Chalk',  dot: '#EFEEEA', shell: '#e6e4de', rough: 0.7,  sheen: 0.2 }
 };
 
 export var mats = {
-  shell: new THREE.MeshPhysicalMaterial({ color: FINISHES.ember.shell, roughness: 0.62, sheen: 0.08, sheenRoughness: 0.6, sheenColor: new THREE.Color('#ffd2bf') }),
+  // soft-touch shell: matte, a fine sandblasted grain (bump) and a faint velvet sheen on the edges
+  shell: new THREE.MeshPhysicalMaterial({ color: FINISHES.ember.shell, roughness: 0.68, sheen: 0.25, sheenRoughness: 0.7,
+                                          sheenColor: new THREE.Color('#ffb59a'), bumpScale: 0.6 }),
   seam:  new THREE.MeshStandardMaterial({ color: '#3a2a26', roughness: 0.8 }),
-  glass: new THREE.MeshPhysicalMaterial({ color: '#2a2c35', roughness: 0.32, metalness: 0.05, clearcoat: 0.8, clearcoatRoughness: 0.25 }),
+  // satin charcoal face (not mirror glass): soft highlight, slightly cool like the reference
+  glass: new THREE.MeshPhysicalMaterial({ color: '#25262d', roughness: 0.42, metalness: 0.0, clearcoat: 0.35, clearcoatRoughness: 0.45 }),
   ring:  new THREE.MeshStandardMaterial({ color: '#3c3f47', roughness: 0.3, metalness: 0.85 }),
   optic: new THREE.MeshPhysicalMaterial({ color: '#10121a', roughness: 0.04, metalness: 0.2, clearcoat: 1, clearcoatRoughness: 0.02,
                                           iridescence: 0.9, iridescenceIOR: 1.45, emissive: new THREE.Color('#ff6a2a'), emissiveIntensity: 0 }),
@@ -35,6 +38,23 @@ export var mats = {
   ir:    new THREE.MeshBasicMaterial({ color: '#FE7743', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide }),
   fov:   new THREE.MeshBasicMaterial({ color: '#FE7743', transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide })
 };
+
+/* Fine grain for the shell: tiling value noise used as a bump + roughness map. */
+(function grain() {
+  var N = 256, c = document.createElement('canvas'); c.width = c.height = N;
+  var g = c.getContext('2d'), img = g.createImageData(N, N);
+  for (var i = 0; i < N * N; i++) {
+    var v = 118 + Math.random() * 20;          // tight range: grain, not noise
+    img.data[i * 4] = img.data[i * 4 + 1] = img.data[i * 4 + 2] = v; img.data[i * 4 + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  var tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(6, 6);                         // extrude UVs are in model units (~2.2 across)
+  tex.anisotropy = 4;
+  mats.shell.bumpMap = tex;
+  mats.shell.roughnessMap = tex;
+})();
 
 export function applyFinish(key) {
   var f = FINISHES[key];
@@ -152,10 +172,10 @@ export function buildSensor() {
   body.add(face);
   var FACE = 0.034;   // front surface of the glass
 
-  // the only two openings on the face: thermal lens up toward the apex, pinhole to its lower right
-  var lens = optic(body, 0.17, 0.1, FACE, 0.26);
+  // the only two openings on the face: thermal lens centred, pinhole to its lower right
+  var lens = optic(body, 0, -0.02, FACE, 0.27);
   var hole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.02, 20), mats.hole);
-  hole.rotation.x = Math.PI / 2; hole.position.set(0.44, -0.16, FACE);
+  hole.rotation.x = Math.PI / 2; hole.position.set(0.36, -0.3, FACE);
   body.add(hole);
 
   // printed wordmark, lower left of the face like the reference
@@ -206,18 +226,18 @@ export function buildSensor() {
   root.children.forEach(function (ch) { ch.position.add(shift); });
 
   var irBeam = beam(4.2, 0.6, mats.ir);
-  irBeam.position.set(-0.22, -0.18, FACE + 0.02);   // emitters behind the glass
+  irBeam.position.set(0.0, -0.4, FACE + 0.02);   // emitters behind the glass, under the lens
   body.add(irBeam);
   var fov = beam(3.6, 1.7, mats.fov);
-  fov.position.set(0.17, 0.1, FACE + 0.02);
+  fov.position.set(0, -0.02, FACE + 0.02);
   body.add(fov);
 
   /* Named anchors for callouts, in body-local coordinates: position + outward normal. */
   var Z = new THREE.Vector3(0, 0, 1);
   var anchors = {
-    lens:   { p: new THREE.Vector3(0.17, 0.1, FACE + 0.1),    n: Z },
-    light:  { p: new THREE.Vector3(0.44, -0.16, FACE + 0.02), n: Z },
-    ir:     { p: new THREE.Vector3(-0.22, -0.18, FACE + 0.01), n: Z },
+    lens:   { p: new THREE.Vector3(0, -0.02, FACE + 0.1),     n: Z },
+    light:  { p: new THREE.Vector3(0.36, -0.3, FACE + 0.02),  n: Z },
+    ir:     { p: new THREE.Vector3(0.0, -0.4, FACE + 0.01),   n: Z },
     grille: { p: grilleAnchor, n: normal },
     // the plate lives on root, but body and plate were shifted together, so its
     // unshifted coordinates are already body-local

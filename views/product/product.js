@@ -280,7 +280,7 @@ accItems.forEach(function (item) {
 /* --------------------------------------------------------------- finishes */
 
 var FINISH_COPY = {
-  ember: 'Orange shell, dark glass face. Meant to be seen: people know the room is heat-aware.',
+  ember: 'Red soft-touch shell, satin charcoal face. Meant to be seen: people know the room is heat-aware.',
   navy: 'Navy shell, dark glass face. Disappears into dark ceilings, server rooms and AV racks.',
   chalk: 'Chalk shell, dark glass face. Blends into white walls, clean rooms and hotel rooms.'
 };
