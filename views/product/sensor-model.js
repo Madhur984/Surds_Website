@@ -228,15 +228,15 @@ export function buildSensor() {
   var grilleAnchor = new THREE.Vector3(base.x, base.y, -0.32).addScaledVector(normal, 0.01);
 
   // wall plate behind, reaching below the body, with two screw rings showing under it
-  var plate = new THREE.Mesh(extrude(roundedRect(1.6, 1.9, 0.4, -0.1, -0.98), 0.06, 0.05), mats.shell);
+  var plate = new THREE.Mesh(extrude(roundedRect(1.35, 1.55, 0.36, -0.1, -0.84), 0.06, 0.05), mats.shell);
   plate.position.z = -1.78;
   root.add(plate);
-  var screws = [[-0.5, -1.62], [0.3, -1.62]];
+  var screws = [[-0.42, -1.36], [0.22, -1.36]];
   screws.forEach(function (s) {
-    var r = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.022, 10, 36), mats.shell);
+    var r = new THREE.Mesh(new THREE.TorusGeometry(0.11, 0.02, 10, 36), mats.shell);
     r.position.set(s[0], s[1], -1.66);
     root.add(r);
-    var cap = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.02, 28), mats.shell);
+    var cap = new THREE.Mesh(new THREE.CylinderGeometry(0.093, 0.093, 0.02, 28), mats.shell);
     cap.rotation.x = Math.PI / 2; cap.position.set(s[0], s[1], -1.665);
     root.add(cap);
   });
@@ -263,7 +263,7 @@ export function buildSensor() {
     grille: { p: grilleAnchor, n: normal },
     // the plate lives on root, but body and plate were shifted together, so its
     // unshifted coordinates are already body-local
-    mount:  { p: new THREE.Vector3(-0.5, -1.62, -1.62), n: Z }
+    mount:  { p: new THREE.Vector3(-0.42, -1.36, -1.62), n: Z }
   };
   return { root: root, body: body, lens: lens, irBeam: irBeam, fov: fov, anchors: anchors };
 }
