@@ -1,6 +1,6 @@
 /* SURDS Thermal: procedural model of the wall-mounted thermal sensor.
  *
- * Form: a rounded inverted-triangle body ("pick" shape) in two shell pieces with a
+ * Form: a rounded upward-pointing triangle body (apex on top, wide base) in two shell pieces with a
  * seam between them, a dark glass face set into the front with exactly two openings,
  * the thermal lens in the upper corner and a pinhole below it, a printed wordmark, a
  * dotted grille on the upper-left side, and a wall plate with two screw rings behind.
@@ -45,9 +45,9 @@ export function applyFinish(key) {
 
 /* ---- shapes ---- */
 
-// Inverted rounded triangle: wide flat-ish top, apex at the bottom.
-var TRI = [new THREE.Vector2(-1.0, 0.78), new THREE.Vector2(1.0, 0.78), new THREE.Vector2(0, -1.08)];
-var CENTROID = new THREE.Vector2(0, (0.78 + 0.78 - 1.08) / 3);
+// Rounded triangle pointing up: wide base at the bottom, apex on top.
+var TRI = [new THREE.Vector2(-1.0, -0.78), new THREE.Vector2(1.0, -0.78), new THREE.Vector2(0, 1.08)];
+var CENTROID = new THREE.Vector2(0, (-0.78 - 0.78 + 1.08) / 3);
 
 function roundedPolygon(pts, round) {
   var s = new THREE.Shape(), n = pts.length;
@@ -152,24 +152,24 @@ export function buildSensor() {
   body.add(face);
   var FACE = 0.034;   // front surface of the glass
 
-  // the only two openings on the face: thermal lens in the upper corner, pinhole below it
-  var lens = optic(body, 0.36, 0.3, FACE, 0.3);
+  // the only two openings on the face: thermal lens up toward the apex, pinhole to its lower right
+  var lens = optic(body, 0.17, 0.1, FACE, 0.26);
   var hole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.02, 20), mats.hole);
-  hole.rotation.x = Math.PI / 2; hole.position.set(0.4, -0.12, FACE);
+  hole.rotation.x = Math.PI / 2; hole.position.set(0.44, -0.16, FACE);
   body.add(hole);
 
   // printed wordmark, lower left of the face like the reference
   var logo = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.156), logoMaterial());
-  logo.position.set(-0.1, -0.2, FACE + 0.002);
+  logo.position.set(-0.36, -0.48, FACE + 0.002);
   body.add(logo);
 
-  // dotted grille on the upper-left side face of the front shell
+  // dotted grille on the left side face of the front shell, up toward the apex
   var A = TRI[0], B = TRI[2];
-  var edge = B.clone().sub(A).normalize();                      // along the left side, downward
+  var edge = B.clone().sub(A).normalize();                      // along the left side, upward
   var nrm2 = new THREE.Vector2(-edge.y, edge.x);                 // outward normal of the left side
   if (nrm2.x > 0) nrm2.negate();
   var normal = new THREE.Vector3(nrm2.x, nrm2.y, 0).normalize();
-  var base = A.clone().add(edge.clone().multiplyScalar(0.62)).add(nrm2.clone().multiplyScalar(BEV + 0.002));
+  var base = A.clone().add(edge.clone().multiplyScalar(1.15)).add(nrm2.clone().multiplyScalar(BEV + 0.002));
   var holeGeo = new THREE.CylinderGeometry(0.026, 0.026, 0.02, 12);
   var dots = [];
   for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) dots.push([(i - 1) * 0.085, (j - 1) * 0.085]);
@@ -185,11 +185,11 @@ export function buildSensor() {
   body.add(grille);
   var grilleAnchor = new THREE.Vector3(base.x, base.y, -0.32).addScaledVector(normal, 0.01);
 
-  // wall plate behind, longer than the body, with two screw rings below it
-  var plate = new THREE.Mesh(extrude(roundedRect(1.5, 2.2, 0.4, -0.08, -0.75), 0.06, 0.05), mats.shell);
+  // wall plate behind, reaching below the body, with two screw rings showing under it
+  var plate = new THREE.Mesh(extrude(roundedRect(1.6, 1.9, 0.4, -0.1, -0.98), 0.06, 0.05), mats.shell);
   plate.position.z = -1.78;
   root.add(plate);
-  var screws = [[-0.45, -1.55], [0.29, -1.55]];
+  var screws = [[-0.5, -1.62], [0.3, -1.62]];
   screws.forEach(function (s) {
     var r = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.022, 10, 36), mats.shell);
     r.position.set(s[0], s[1], -1.66);
@@ -206,22 +206,22 @@ export function buildSensor() {
   root.children.forEach(function (ch) { ch.position.add(shift); });
 
   var irBeam = beam(4.2, 0.6, mats.ir);
-  irBeam.position.set(-0.25, 0.3, FACE + 0.02);   // emitters behind the glass
+  irBeam.position.set(-0.22, -0.18, FACE + 0.02);   // emitters behind the glass
   body.add(irBeam);
   var fov = beam(3.6, 1.7, mats.fov);
-  fov.position.set(0.36, 0.3, FACE + 0.02);
+  fov.position.set(0.17, 0.1, FACE + 0.02);
   body.add(fov);
 
   /* Named anchors for callouts, in body-local coordinates: position + outward normal. */
   var Z = new THREE.Vector3(0, 0, 1);
   var anchors = {
-    lens:   { p: new THREE.Vector3(0.36, 0.3, FACE + 0.1),   n: Z },
-    light:  { p: new THREE.Vector3(0.4, -0.12, FACE + 0.02), n: Z },
-    ir:     { p: new THREE.Vector3(-0.25, 0.3, FACE + 0.01), n: Z },
+    lens:   { p: new THREE.Vector3(0.17, 0.1, FACE + 0.1),    n: Z },
+    light:  { p: new THREE.Vector3(0.44, -0.16, FACE + 0.02), n: Z },
+    ir:     { p: new THREE.Vector3(-0.22, -0.18, FACE + 0.01), n: Z },
     grille: { p: grilleAnchor, n: normal },
     // the plate lives on root, but body and plate were shifted together, so its
     // unshifted coordinates are already body-local
-    mount:  { p: new THREE.Vector3(-0.45, -1.55, -1.62), n: Z }
+    mount:  { p: new THREE.Vector3(-0.5, -1.62, -1.62), n: Z }
   };
   return { root: root, body: body, lens: lens, irBeam: irBeam, fov: fov, anchors: anchors };
 }
