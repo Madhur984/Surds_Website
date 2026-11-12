@@ -67,22 +67,44 @@ export function applyFinish(key) {
 
 // Rounded triangle pointing up: wide base at the bottom, apex on top.
 var TRI = [new THREE.Vector2(-1.0, -0.78), new THREE.Vector2(1.0, -0.78), new THREE.Vector2(0, 1.08)];
-var CENTROID = new THREE.Vector2(0, (-0.78 - 0.78 + 1.08) / 3);
+var CORNER_R = 0.27;   // corner radius of the shell outline
 
-function roundedPolygon(pts, round) {
+// Incenter + inradius: scaling the triangle about the incenter moves every edge inward
+// by the same distance, which is what keeps the rim around the face even.
+var INCENTER, INRADIUS;
+(function () {
+  var A = TRI[0], B = TRI[1], C = TRI[2];
+  var a = B.distanceTo(C), b = C.distanceTo(A), c = A.distanceTo(B), p = a + b + c;
+  INCENTER = new THREE.Vector2((a * A.x + b * B.x + c * C.x) / p, (a * A.y + b * B.y + c * C.y) / p);
+  var area = Math.abs((B.x - A.x) * (C.y - A.y) - (C.x - A.x) * (B.y - A.y)) / 2;
+  INRADIUS = area / (p / 2);
+})();
+
+/* Triangle with circular-arc corners of radius r (tangent to both edges). */
+function roundedPolygon(pts, r) {
   var s = new THREE.Shape(), n = pts.length;
   for (var i = 0; i < n; i++) {
     var prev = pts[(i + n - 1) % n], cur = pts[i], next = pts[(i + 1) % n];
-    var a = cur.clone().add(prev.clone().sub(cur).normalize().multiplyScalar(round));
-    var b = cur.clone().add(next.clone().sub(cur).normalize().multiplyScalar(round));
-    if (i === 0) s.moveTo(a.x, a.y); else s.lineTo(a.x, a.y);
-    s.quadraticCurveTo(cur.x, cur.y, b.x, b.y);
+    var u = prev.clone().sub(cur).normalize(), v = next.clone().sub(cur).normalize();
+    var half = Math.acos(THREE.MathUtils.clamp(u.dot(v), -1, 1)) / 2;
+    var t = r / Math.tan(half);                                   // tangent point distance along each edge
+    var centre = cur.clone().add(u.clone().add(v).normalize().multiplyScalar(r / Math.sin(half)));
+    var a = cur.clone().addScaledVector(u, t), b = cur.clone().addScaledVector(v, t);
+    var start = Math.atan2(a.y - centre.y, a.x - centre.x), end = Math.atan2(b.y - centre.y, b.x - centre.x);
+    // start exactly where the arc starts and let absarc bridge the straight edges itself:
+    // a separately computed edge point differs by float noise, and that near-duplicate
+    // vertex kinks the extrude bevel into a visible notch
+    if (i === 0) s.moveTo(centre.x + r * Math.cos(start), centre.y + r * Math.sin(start));
+    s.absarc(centre.x, centre.y, r, start, end, false);
   }
   s.closePath();
   return s;
 }
-function scaledTri(k) {
-  return TRI.map(function (p) { return p.clone().sub(CENTROID).multiplyScalar(k).add(CENTROID); });
+/* The outline pulled in by d on every side, corners staying concentric. */
+function insetOutline(d) {
+  var k = (INRADIUS - d) / INRADIUS;
+  var pts = TRI.map(function (p) { return p.clone().sub(INCENTER).multiplyScalar(k).add(INCENTER); });
+  return roundedPolygon(pts, Math.max(0.02, CORNER_R - d));
 }
 function roundedRect(w, h, r, cx, cy) {
   var s = new THREE.Shape(), x = cx - w / 2, y = cy - h / 2;
@@ -149,7 +171,7 @@ export function buildSensor() {
   var root = new THREE.Group();
   var body = new THREE.Group();
   root.add(body);
-  var outline = roundedPolygon(TRI, 0.46);
+  var outline = roundedPolygon(TRI, CORNER_R);
   var BEV = 0.1;
 
   // front shell piece: z from -0.9 to 0
@@ -161,12 +183,12 @@ export function buildSensor() {
   rear.position.z = -1.56;
   body.add(rear);
   // dark core that shows through the seam
-  var core = new THREE.Mesh(extrude(roundedPolygon(scaledTri(0.985), 0.44), 0.22, 0), mats.seam);
+  var core = new THREE.Mesh(extrude(insetOutline(0.01), 0.22, 0), mats.seam);
   core.position.z = -1.02;
   body.add(core);
 
   // dark glass face, a hair proud of the shell's flat front
-  var faceShape = roundedPolygon(scaledTri(0.9), 0.38);
+  var faceShape = insetOutline(0.075);   // even 0.075 rim (+ the shell's bevel) all the way round
   var face = new THREE.Mesh(extrude(faceShape, 0.02, 0.012, 3), mats.glass);
   face.position.z = 0.0;   // shell front is z = 0; the plate stands 0.03 proud of it
   body.add(face);
