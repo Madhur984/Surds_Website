@@ -20,7 +20,7 @@ import datetime
 import urllib.parse
 
 ROUTES = {
-    "/": "/views/render/index.html",        # the city-build intro opens the site
+    "/": "/views/render_madhur/index.html",  # the city-build intro opens the site
     "/home": "/views/home/index.html",
     "/classic": "/views/main/index.html",
     "/enterprise": "/views/enterprise/index.html",
@@ -29,7 +29,9 @@ ROUTES = {
     "/gateway": "/views/gateway/index.html",
     "/survey": "/survey.html",
     "/data-center": "/views/data-center/index.html",
-    "/render": "/views/render/index.html",
+    "/render": "/views/render_madhur/index.html",
+    "/render_madhur": "/views/render_madhur/index.html",
+    "/render_aryan": "/views/render_aryan/index.html",
     "/explore": "/views/explore/index.html",
 }
 
