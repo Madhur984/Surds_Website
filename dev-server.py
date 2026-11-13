@@ -26,7 +26,8 @@ ROUTES = {
     "/enterprise": "/views/enterprise/index.html",
     "/card-tour": "/views/card-tour/index.html",
     "/tutorial": "/views/film/index.html",        # the cinematic tutorial
-    "/product": "/views/film/index.html",
+    "/product": "/views/usecases/index.html",     # use cases in the mall
+    "/usecases": "/views/usecases/index.html",
     "/guide": "/views/tutorial/index.html",       # the step-by-step guide
     "/gateway": "/views/gateway/index.html",
     "/survey": "/survey.html",

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SURDS Thermal: Use Cases</title>
+<meta name="description" content="What one SURDS Thermal sensor does in a shopping mall: footfall, window dwell, seating, queues, walking routes, capacity, air-conditioning, after-hours watch and leasing evidence. Anonymous, by heat.">
+<link rel="icon" href="/shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/views/usecases/usecases.css">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/" } }</script>
+</head>
+<body>
+<canvas id="stage" aria-hidden="true"></canvas>
+<div class="scrim" aria-hidden="true"></div>
+<div id="tags" aria-hidden="true"></div>
+
+<div id="loader" role="status"><div><b>SURDS</b> Thermal</div><p>Loading the mall <span id="pct">0%</span></p><i><em id="bar"></em></i></div>
+
+<header class="nav">
+  <a class="brand" href="#top"><b>SURDS</b><span>Thermal</span></a>
+  <nav>
+    <a href="#cases">Use cases</a>
+    <a href="#privacy">Privacy</a>
+    <a href="#how">How it works</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+  <a class="btn small" href="/tutorial">Watch the setup film</a>
+</header>
+
+<main id="top">
+
+<section class="hero" data-shot="hero">
+  <div class="hero-in">
+    <p class="eyebrow">SURDS Thermal · for shopping malls</p>
+    <h1>Know how your mall is really used.</h1>
+    <p class="lede">One small sensor reads a space by its heat. It counts visitors, finds where they stop and queue, keeps busy areas safe and runs the air-conditioning for the people actually there. It never sees a face.</p>
+    <div class="hero-cta"><a class="btn" href="#cases">See the use cases</a><a class="btn ghost" href="#privacy">Why heat, not cameras</a></div>
+    <ul class="facts">
+      <li><b>32 × 24</b><span>temperatures per frame, nothing else</span></li>
+      <li><b>~2 / s</b><span>readings, processed on the sensor</span></li>
+      <li><b>0</b><span>images, faces or names stored</span></li>
+    </ul>
+  </div>
+  <p class="scroll-hint">Scroll to walk through the mall</p>
+</section>
+
+<section class="index" id="cases" data-shot="overview">
+  <div class="index-in">
+    <p class="eyebrow">One sensor, nine jobs</p>
+    <h2>Every number on the map is a question SURDS answers.</h2>
+    <p class="sub">Each use case below flies you to the spot in this mall where a sensor would hang, and shows what it sees.</p>
+    <ol class="uc-grid">
+      <li><a href="#entrances"><i>01</i><b>Footfall</b><span>Visitors in and out, door by door</span></a></li>
+      <li><a href="#storefronts"><i>02</i><b>Window dwell</b><span>Who stops at a frontage, and for how long</span></a></li>
+      <li><a href="#seating"><i>03</i><b>Seating</b><span>Free tables and real turnover</span></a></li>
+      <li><a href="#queues"><i>04</i><b>Queues</b><span>Line length and the wait it means</span></a></li>
+      <li><a href="#routes"><i>05</i><b>Walking routes</b><span>Where shoppers actually go</span></a></li>
+      <li><a href="#capacity"><i>06</i><b>Capacity</b><span>Live headcount against a safe limit</span></a></li>
+      <li><a href="#cooling"><i>07</i><b>Air-conditioning</b><span>Cool the people, not empty wings</span></a></li>
+      <li><a href="#afterhours"><i>08</i><b>After hours</b><span>One warm shape in a closed wing</span></a></li>
+      <li><a href="#leasing"><i>09</i><b>Leasing</b><span>Rents and tenant mix on evidence</span></a></li>
+    </ol>
+  </div>
+</section>
+
+<section class="uc" id="entrances" data-shot="entrance" data-zone="entrance">
+  <article class="card">
+    <p class="eyebrow"><i>01</i> Entrances</p>
+    <h2>Count every visitor, at every door.</h2>
+    <div class="live" data-live="entrance"></div>
+    <h3>The question</h3>
+    <p>Footfall is where every mall report starts, yet it is usually a guess from till receipts or a clicker at one door.</p>
+    <h3>What SURDS reads</h3>
+    <ul><li>Each warm shape that crosses a line you draw across the doorway, and which way it went</li><li>Totals by the hour, the day and the week, per entrance</li><li>Which door carries the crowd at which time</li></ul>
+    <h3>What you do with it</h3>
+    <p>Staff the hours that need it, show tenants real footfall, and compare a campaign week with the one before.</p>
+  </article>
+</section>
+
+<section class="uc" id="storefronts" data-shot="storefront" data-zone="storefront">
+  <article class="card">
+    <p class="eyebrow"><i>02</i> Storefronts</p>
+    <h2>See who stops, not just who passes.</h2>
+    <div class="live" data-live="storefront"></div>
+    <h3>The question</h3>
+    <p>A window display either stops people or it doesn't. Sales figures can't tell you which, because most people who stop never walk in.</p>
+    <h3>What SURDS reads</h3>
+    <ul><li>Passers-by along the frontage</li><li>Shapes that slow down and stay at the glass, and for how long</li><li>The stop rate: stoppers out of everyone who passed</li></ul>
+    <h3>What you do with it</h3>
+    <p>Rate window changes in days instead of seasons, compare frontages side by side, and bring numbers to rent reviews.</p>
+  </article>
+</section>
+
+<section class="uc" id="seating" data-shot="seating" data-zone="seating">
+  <article class="card">
+    <p class="eyebrow"><i>03</i> Seating &amp; terraces</p>
+    <h2>Know which tables are free, and for how long.</h2>
+    <div class="live" data-live="seating"></div>
+    <h3>The question</h3>
+    <p>Terraces and food courts overflow at lunch and sit empty at four. Nobody knows the real turnover or whether there are enough seats.</p>
+    <h3>What SURDS reads</h3>
+    <ul><li>Which table areas have people at them</li><li>How long groups stay before a table frees up</li><li>Peak hours, day by day</li></ul>
+    <h3>What you do with it</h3>
+    <p>Size seating to real demand, send staff to clear a table the moment it empties, and show free seats on a screen at the entrance.</p>
+  </article>
+</section>
+
+<section class="uc" id="queues" data-shot="queue" data-zone="queue">
+  <article class="card">
+    <p class="eyebrow"><i>04</i> Queues</p>
+    <h2>Open the second till before the line gets long.</h2>
+    <div class="live" data-live="queue"></div>
+    <h3>The question</h3>
+    <p>Queues lose sales quietly. People look at the line, sigh and walk on, and no report ever records them.</p>
+    <h3>What SURDS reads</h3>
+    <ul><li>How many people stand in the queue zone</li><li>How fast the front of the line moves, so roughly how long the wait is</li><li>The hot espresso machine too, which stays under the people threshold and is never counted</li></ul>
+    <h3>What you do with it</h3>
+    <p>Alert staff when the line passes a limit, measure service speed, and plan shifts around the hours queues actually form.</p>
+  </article>
+</section>
+
+<section class="uc" id="routes" data-shot="routes" data-zone="routes">
+  <article class="card">
+    <p class="eyebrow"><i>05</i> Walking routes</p>
+    <h2>Find the routes shoppers actually take.</h2>
+    <div class="live" data-live="routes"></div>
+    <h3>The question</h3>
+    <p>A floor plan shows where people should walk. Heat shows where they really do, and where nobody goes at all.</p>
+    <h3>What SURDS reads</h3>
+    <ul><li>Positions over time, from a row of sensors along a walkway</li><li>The main paths, the shortcuts and the corners nobody visits</li><li>Bottlenecks where flow slows down</li></ul>
+    <h3>What you do with it</h3>
+    <p>Put kiosks and promotions on the paths people use, fix dead corners with signage or seating, and stage events where the traffic is.</p>
+  </article>
+</section>
+
+<section class="uc" id="capacity" data-shot="capacity" data-zone="capacity">
+  <article class="card">
+    <p class="eyebrow"><i>06</i> Capacity &amp; safety</p>
+    <h2>Keep busy spaces safe without a clicker at the gate.</h2>
+    <div class="live" data-live="capacity"></div>
+    <h3>The question</h3>
+    <p>Rooftops, play areas and event spaces all have a safe limit. Counting by hand is slow, and it fails exactly when the space is busiest.</p>
+    <h3>What SURDS reads</h3>
+    <ul><li>A live headcount across every sensor covering the space</li><li>How quickly it is filling up</li><li>How warm the crowd is getting</li></ul>
+    <h3>What you do with it</h3>
+    <p>Warn the team at 80 percent, pause entry at the limit, and keep a record of every busy hour for safety audits.</p>
+  </article>
+</section>
+
+<section class="uc" id="cooling" data-shot="cooling" data-zone="cooling">
+  <article class="card">
+    <p class="eyebrow"><i>07</i> Air-conditioning</p>
+    <h2>Cool the people, not the empty wings.</h2>
+    <div class="live" data-live="cooling"></div>
+    <h3>The question</h3>
+    <p>Air-conditioning runs to a timetable while the crowd moves around the building. An empty wing gets the same cold air as a packed one.</p>
+    <h3>What SURDS reads</h3>
+    <ul><li>People in each zone, and how warm they are</li><li>The room temperature where they are</li><li>The AC's own remote codes, which it learns once and then sends itself</li></ul>
+    <h3>What you do with it</h3>
+    <p>In Bloom, switch a zone to Automatic and pick its rules: on when someone is in, when people read warm, or when the room passes a limit. Off after a delay when no rule holds. Every switch is logged with its reason.</p>
+  </article>
+</section>
+
+<section class="uc" id="afterhours" data-shot="afterhours" data-zone="afterhours">
+  <article class="card">
+    <p class="eyebrow"><i>08</i> After hours &amp; equipment</p>
+    <h2>Watch the building when it's closed.</h2>
+    <div class="live" data-live="afterhours"></div>
+    <h3>The question</h3>
+    <p>After closing, cameras need someone watching hours of footage. A warm body in a closed area should simply raise its hand.</p>
+    <h3>What SURDS reads</h3>
+    <ul><li>Any person in a zone during closed hours, in full darkness</li><li>The hottest point in view, always: motors, kitchen equipment, electrical panels</li></ul>
+    <h3>What you do with it</h3>
+    <p>Send security to one alert instead of a wall of screens, and catch a motor running hot weeks before it fails.</p>
+  </article>
+</section>
+
+<section class="uc" id="leasing" data-shot="leasing" data-zone="leasing">
+  <article class="card">
+    <p class="eyebrow"><i>09</i> Leasing &amp; planning</p>
+    <h2>Price every square metre on evidence.</h2>
+    <div class="live" data-live="leasing"></div>
+    <h3>The question</h3>
+    <p>Rents are set on location and instinct. Busy and quiet units often pay the same, and prospects have to take your word for the traffic.</p>
+    <h3>What SURDS reads</h3>
+    <ul><li>Footfall by wing and by frontage, week after week</li><li>Where people stop and where they only pass</li><li>The change a new anchor tenant or a refit really brings</li></ul>
+    <h3>What you do with it</h3>
+    <p>Set rents and tenant mix on traffic, show prospects real numbers, and plan the next refit where it pays back.</p>
+  </article>
+</section>
+
+<section class="privacy" id="privacy" data-shot="privacy" data-zone="entrance">
+  <div class="privacy-in">
+    <div class="pv-text">
+      <p class="eyebrow">Privacy by physics</p>
+      <h2>It counts people. It can't see them.</h2>
+      <p>SURDS has no camera. Its whole picture is 768 temperatures, a grid of 32 by 24. A person is a warm patch of a few cells. There is no face, no clothing and no screen in that data, so there is nothing to identify, leak or misuse.</p>
+      <ul class="ticks"><li>Readings are turned into counts and positions on the sensor itself</li><li>Works in full darkness, because heat needs no light</li><li>Nothing to blur, mask or delete later</li></ul>
+    </div>
+    <div class="pv-compare">
+      <figure class="pv-cam"><div class="pv-window"></div><figcaption>What a camera at this door would record</figcaption></figure>
+      <figure class="pv-heat"><canvas id="pvgrid" width="32" height="24"></canvas><figcaption>What SURDS records: <span data-live="pv"></span></figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<div class="solid">
+<section class="how" id="how">
+  <p class="eyebrow">How it works</p>
+  <h2>From box to live numbers in an afternoon.</h2>
+  <ol class="steps">
+    <li><i>1</i><b>Mount it</b><p>Screw the wall plate up high, looking across the floor people use, and click the sensor on. Its angled face tips it down into the space.</p></li>
+    <li><i>2</i><b>Connect it</b><p>Open Bloom in Chrome, connect to the sensor over Bluetooth and give it your Wi-Fi. The password goes straight to the sensor.</p></li>
+    <li><i>3</i><b>Set the rules</b><p>Tell Bloom how it hangs, set the people threshold, then switch on counting zones and air-conditioning rules.</p></li>
+    <li><i>4</i><b>Read the numbers</b><p>The live view shows people, temperatures and every decision. Analytics keeps the history, from 15 minutes to 7 days.</p></li>
+  </ol>
+  <div class="how-cta"><a class="btn" href="/tutorial">▶ Watch the setup film</a><a class="btn ghost dark" href="/guide">Step-by-step install guide</a></div>
+</section>
+
+<section class="faq" id="faq">
+  <p class="eyebrow">Questions</p>
+  <h2>What people ask first.</h2>
+  <details><summary>Does it record video or images?</summary><p>No. It has no camera. It reads a grid of 32 × 24 temperatures about twice a second and turns warm patches into counts and positions.</p></details>
+  <details><summary>How does it tell people from hot things?</summary><p>Each patch must be warmer than its surroundings by the blob threshold you set. A sunlit floor or an espresso machine sits under or outside that rule and is not counted, and the hottest point in view is reported separately so equipment is watched, not counted. Keep strong heat sources out of view where you can.</p></details>
+  <details><summary>How many sensors do I need?</summary><p>One for each area you want to measure: an entrance, a frontage, a seating area, a queue, a wing. Start with one door and add more where the questions are.</p></details>
+  <details><summary>Does it work at night or in the dark?</summary><p>Yes. It reads heat, not light, so it counts the same at midnight as at noon. That is what makes the after-hours alert possible.</p></details>
+  <details><summary>How does it connect?</summary><p>Over Wi-Fi, including company networks with a username and password. You set it up from Bloom in Chrome over Bluetooth, and the Wi-Fi password goes directly to the sensor.</p></details>
+  <details><summary>Which air-conditioners can it run?</summary><p>Units with an infrared remote. You teach it each button once in Bloom's Remote panel; it then sends the same codes itself and hears when someone uses the real remote.</p></details>
+  <details><summary>Where do I see the data?</summary><p>In Bloom, at thermal.gpunet.in: a live view of people, room and AC, a log of every decision with its reason, and Analytics from 15 minutes to 7 days.</p></details>
+</section>
+
+<section class="cta">
+  <h2>Start with one door.</h2>
+  <p>Put a SURDS Thermal over your busiest entrance for a week. The footfall alone usually answers the next question: where the second sensor should go.</p>
+  <div class="how-cta"><a class="btn" href="https://thermal.gpunet.in" rel="noopener">Open Bloom</a><a class="btn ghost" href="/tutorial">Watch the setup film</a><a class="btn ghost" href="/guide">Install guide</a></div>
+</section>
+
+<footer>
+  <p><b>SURDS</b> Thermal · Use cases</p>
+  <p class="fine">Figures shown in this tour are simulated to illustrate each use case. Mall model: “Shopping mall” by Pasha, via Sketchfab.</p>
+</footer>
+</div>
+
+</main>
+<script type="module" src="/views/usecases/usecases.js"></script>
+</body>
+</html>

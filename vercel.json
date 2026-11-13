@@ -26,7 +26,11 @@
     },
     {
       "source": "/product",
-      "destination": "/views/film/index.html"
+      "destination": "/views/usecases/index.html"
+    },
+    {
+      "source": "/usecases",
+      "destination": "/views/usecases/index.html"
     },
     {
       "source": "/guide",
