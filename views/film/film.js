@@ -20,7 +20,15 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { loadPeople, makePerson } from '/views/explore/people.js?v=2';
+import { loadHumans, makeHuman, setGait, updateHuman } from '/views/film/humans.js';
 import { buildSensor, applyFinish } from '/views/film/sensor-model.js';
 
 var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -33,13 +41,15 @@ var V = function (x, y, z) { return new THREE.Vector3(x, y, z); };
 /* ================================================================ renderer */
 var canvas = $('#stage');
 var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-var DPR = Math.min(window.devicePixelRatio, 1.75);
+var DPR = Math.min(window.devicePixelRatio, 2);
+var quality = DPR;              // lowered automatically if frames get slow
 renderer.setPixelRatio(DPR);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMappingExposure = 0.92;
 
+var world = { thermal: false, night: false }, ENV_DAY = 0.55;
 var scene = new THREE.Scene();
 var DAY_BG = new THREE.Color('#dfe3e8'), NIGHT_BG = new THREE.Color('#0d1520'), THERMAL_BG = new THREE.Color('#0b0618');
 scene.background = DAY_BG.clone();
@@ -47,20 +57,50 @@ scene.fog = new THREE.Fog(DAY_BG.clone(), 45, 110);
 var pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 0.55;
+// (an outdoor HDR sky was tried here: it washed the indoor mall out, so the studio room light stays)
 
 var camera = new THREE.PerspectiveCamera(40, 1, 0.02, 220);
-var hemi = new THREE.HemisphereLight(0xfff4e6, 0x9aa3ad, 1.05); scene.add(hemi);
+var hemi = new THREE.HemisphereLight(0xfff4e6, 0x8a929c, 0.85); scene.add(hemi);
 var sun = new THREE.DirectionalLight(0xfff0dc, 1.7);
 sun.position.set(14, 26, 12); sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(4096, 4096);
 Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 20, bottom: -20, near: 1, far: 70 });
 sun.shadow.bias = -0.0004;
 scene.add(sun);
+
+/* Cinematic post: MSAA render target -> glow on lit signs -> depth of field on close-ups
+   -> tone mapping (OutputPass) -> a light film grade (vignette, grain, gentle contrast). */
+var GradeShader = {
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uVignette: { value: 0.32 }, uGrain: { value: 0.035 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: [
+    'uniform sampler2D tDiffuse; uniform float uTime, uVignette, uGrain; varying vec2 vUv;',
+    'float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }',
+    'void main(){',
+    '  vec4 c = texture2D(tDiffuse, vUv);',
+    '  c.rgb = mix(c.rgb, c.rgb * c.rgb * (3.0 - 2.0 * c.rgb), 0.18);',            // soft S-curve
+    '  c.rgb *= vec3(1.015, 1.0, 0.985);',                                       // a touch warm
+    '  float d = distance(vUv, vec2(0.5)); c.rgb *= 1.0 - uVignette * smoothstep(0.35, 0.85, d);',
+    '  c.rgb += (hash(vUv * 1000.0 + uTime) - 0.5) * uGrain;',
+    '  gl_FragColor = c;',
+    '}'].join('\n')
+};
+var composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(2, 2, { type: THREE.HalfFloatType, samples: 4 }));
+composer.addPass(new RenderPass(scene, camera));
+var bloomPass = new UnrealBloomPass(new THREE.Vector2(2, 2), 0.16, 0.45, 0.97);
+composer.addPass(bloomPass);
+var bokehPass = new BokehPass(scene, camera, { focus: 6, aperture: 0.0005, maxblur: 0.006 });
+bokehPass.enabled = false;
+composer.addPass(bokehPass);
+composer.addPass(new OutputPass());
+var gradePass = new ShaderPass(GradeShader);
+composer.addPass(gradePass);
 
 function resize() {
   var w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h; camera.updateProjectionMatrix();
+  if (typeof composer !== 'undefined' && !world.thermal) { composer.setPixelRatio(quality); composer.setSize(w, h); }
 }
 window.addEventListener('resize', resize);
 resize();
@@ -99,7 +139,7 @@ var floorTex = canvasTex(1024, 1024, function (g, w) {
   for (var k = 0; k <= 4; k++) { g.beginPath(); g.moveTo(k * w / 4, 0); g.lineTo(k * w / 4, w); g.stroke(); g.beginPath(); g.moveTo(0, k * w / 4); g.lineTo(w, k * w / 4); g.stroke(); }
 });
 floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping; floorTex.repeat.set(8, 6);
-var floor = add(mall, new THREE.PlaneGeometry(64, 48), std(0xffffff, 0.32, { map: floorTex }), 0, 0, 0, 22);
+var floor = add(mall, new THREE.PlaneGeometry(64, 48), new THREE.MeshPhysicalMaterial({ map: floorTex, roughness: 0.26, clearcoat: 0.85, clearcoatRoughness: 0.1 }), 0, 0, 0, 22);
 floor.rotation.x = -Math.PI / 2; floor.castShadow = false;
 
 var wallMat = std(0xf4f1ec, 0.85), trimMat = std(0x2f3a44, 0.6), glassMat = new THREE.MeshPhysicalMaterial({ color: 0xcfe3ee, roughness: 0.05, transmission: 0, transparent: true, opacity: 0.22, metalness: 0.1 });
@@ -376,7 +416,7 @@ function tempOf(o) {
   }
   return 22.5;
 }
-var world = { thermal: false };
+world.thermal = false;
 function setThermal(on) {
   if (world.thermal === on) return;
   world.thermal = on;
@@ -387,7 +427,7 @@ function setThermal(on) {
     if (on) { if (!o.userData.mat0) o.userData.mat0 = o.material; o.material = thermalMat(tempOf(o) + (o.userData.jitter || 0)); }
     else if (o.userData.mat0) o.material = o.userData.mat0;
   });
-  renderer.setPixelRatio(on ? Math.max(0.07, 220 / window.innerWidth) : DPR);
+  renderer.setPixelRatio(on ? Math.max(0.07, 220 / window.innerWidth) : quality);
   canvas.classList.toggle('thermal', on);
   renderer.toneMapping = on ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
   resize();
@@ -402,39 +442,50 @@ function refreshThermalTemps() {   // after a temperature changes while thermal 
 var walkers = [], specials = {};
 var WAYPOINTS = [[-12, 6], [-8, -5], [-2, -6], [3, -4], [8, -5], [6, 3], [1, 8], [-4, 9], [-10, 1], [9, 9], [-13, -6], [2, 0], [-3, 5], [11, -6]];
 function rnd(i) { var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+var actors = [];   // every animated human (walkers and the special cast)
+var USE_REAL = true;
+function human(opts) {
+  if (USE_REAL) return makeHuman(opts);
+  // fallback when the realistic models cannot load: the posed /explore figures
+  var stub = { setEffectiveWeight: function () {}, timeScale: 1 };
+  var poseMap = { walk: 'walk', idle: 'stand' };
+  return { obj: makePerson({ pose: poseMap[opts.state] || 'stand', seed: opts.seed }), mixer: { update: function () {} }, walk: stub, idle: stub, gait: 1 };
+}
 function setupPeople() {
-  for (var i = 0; i < 26; i++) {
-    var p = makePerson({ pose: 'walk', seed: i + 3 });
+  for (var i = 0; i < 24; i++) {
+    var kind = i % 11 === 10 ? 'guard' : (rnd(i * 13) < 0.5 ? 'woman' : 'man');
+    var h = human({ kind: kind, seed: i + 3, state: 'walk' }), p = h.obj;
     p.userData.isPerson = true;
     p.traverse(function (o) { if (o.isMesh) o.userData.jitter = (rnd(i) - 0.5) * 1.2; });
     var path = []; for (var k = 0; k < 4; k++) path.push(WAYPOINTS[Math.floor(rnd(i * 7 + k) * WAYPOINTS.length)]);
-    var w = { obj: p, path: path, path0: path.slice(), leg: 0, t: rnd(i * 3), speed: 1.05 + rnd(i * 5) * 0.4, on: false, vis: 0 };
+    var w = { h: h, obj: p, base: p.scale.x, path: path, path0: path.slice(), leg: 0, t: rnd(i * 3), speed: 1.0 + rnd(i * 5) * 0.35, on: false, vis: 0 };
     var a = path[0]; p.position.set(a[0], 0, a[1]);
     p.visible = false; scene.add(p); walkers.push(w);
   }
   function place(name, opts, pos, rotY) {
-    var p = makePerson(opts); p.userData.isPerson = true; p.position.copy(pos); p.rotation.y = rotY;
-    p.visible = false; scene.add(p); specials[name] = p; return p;
+    var h = human(opts), p = h.obj; p.userData.isPerson = true; p.position.copy(pos); p.rotation.y = rotY;
+    p.visible = false; scene.add(p); specials[name] = p; actors.push(h); h.speed = opts.state === 'walk' ? 1.1 : 0; return p;
   }
-  place('tech', { pose: 'tablet', body: 'm', seed: 41, vest: true, hat: true }, V(-14.6, 0, -1.1), -Math.PI / 2 - 0.35);
-  place('remote', { pose: 'stand', body: 'f', seed: 12 }, V(-13.3, 0, 0.2), -Math.PI / 2 - 0.5);
+  place('tech', { kind: 'man', seed: 41, state: 'idle' }, V(-14.4, 0, -0.9), -Math.PI / 2 - 0.35);
+  place('remote', { kind: 'woman', seed: 12, state: 'idle' }, V(-13.3, 0, 0.2), -Math.PI / 2 - 0.5);
   specials.queue = [];
-  for (var q = 0; q < 6; q++) specials.queue.push(place('q' + q, { pose: 'stand', seed: 70 + q }, V(-6 + 0.2 * Math.sin(q), 0, 4.0 + q * 0.75), Math.PI));
-  place('night', { pose: 'walk', body: 'm', seed: 99 }, V(9, 0, 6), -2.2);
+  for (var q = 0; q < 6; q++) specials.queue.push(place('q' + q, { kind: q % 2 ? 'woman' : 'man', seed: 70 + q, state: 'idle' }, V(-6 + 0.2 * Math.sin(q), 0, 4.0 + q * 0.75), Math.PI));
+  place('night', { kind: 'guard', seed: 99, state: 'walk' }, V(9, 0, 6), -2.2);
 }
 function setCrowd(n) { walkers.forEach(function (w, i) { w.on = i < n; }); }
 function updateWalkers(dt) {
   walkers.forEach(function (w) {
     w.vis = lerp(w.vis, w.on ? 1 : 0, 1 - Math.pow(0.02, dt));
     w.obj.visible = w.vis > 0.02;
-    w.obj.scale.setScalar(0.6 + 0.4 * w.vis);
+    w.obj.scale.setScalar(w.base * (0.6 + 0.4 * w.vis));
     if (!w.obj.visible) return;
+    updateHuman(w.h, dt, w.speed);
     var a = w.path[w.leg], b = w.path[(w.leg + 1) % w.path.length];
     var len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
     w.t += dt * w.speed / len;
     if (w.t >= 1) { w.t -= 1; w.leg = (w.leg + 1) % w.path.length; return; }
     var x = lerp(a[0], b[0], w.t), z = lerp(a[1], b[1], w.t);
-    w.obj.position.set(x, Math.abs(Math.sin(w.t * len * 3.4)) * 0.025, z);
+    w.obj.position.set(x, 0, z);
     var target = Math.atan2(b[0] - a[0], b[1] - a[1]);
     w.obj.rotation.y = lerpAngle(w.obj.rotation.y, target, 1 - Math.pow(0.001, dt));
     if (heatmap.visible) stampHeat(x, z, dt);
@@ -467,7 +518,7 @@ function updateHud(dt) {
   sim.hot = lerp(sim.hot, sim.hotTarget, 1 - Math.pow(0.1, dt));
   var n = visibleCount();
   hud.people.textContent = n;
-  hud.room.textContent = sim.room.toFixed(1) + ' °C';
+  hud.room.textContent = sim.room.toFixed(1);
   hud.pread.textContent = n ? (33.2 + Math.sin(sim.clock / 300) * 0.3).toFixed(1) + ' °C' : 'nobody';
   hud.hot.textContent = sim.hot.toFixed(1) + ' °C';
   hud.orb.classList.toggle('on', sim.ac); hud.orb.textContent = sim.ac ? 'ON' : 'OFF';
@@ -509,7 +560,7 @@ var POV = function () { return { pos: SENSOR_EYE.clone().add(V(0.2, -0.04, 0)), 
 function shot(s, dur) {
   if (typeof s === 'function') s = s();
   cam.from = { pos: camera.position.clone(), look: cam.look.clone(), fov: camera.fov };
-  cam.to = { pos: s.pos.clone(), look: s.look.clone(), fov: s.fov || 40, pov: !!s.pov };
+  cam.to = { pos: s.pos.clone(), look: s.look.clone(), fov: s.fov || 40, pov: !!s.pov, dof: !!s.dof };
   cam.t = 0; cam.dur = REDUCED ? 0.01 : (dur || 2.8);
 }
 function updateCamera(dt, now) {
@@ -522,17 +573,17 @@ function updateCamera(dt, now) {
   camera.fov = lerp(f.fov, t.fov, e); camera.updateProjectionMatrix();
   camera.lookAt(cam.look);
 }
-var S = function (px, py, pz, lx, ly, lz, fov) { return { pos: V(px, py, pz), look: V(lx, ly, lz), fov: fov || 40 }; };
+var S = function (px, py, pz, lx, ly, lz, fov, dof) { return { pos: V(px, py, pz), look: V(lx, ly, lz), fov: fov || 40, dof: !!dof }; };
 var SHOTS = {
   aerial: S(19, 15, 25, -2, 1, -3, 42), toWall: S(2, 7, 12, -14, 3.6, -2, 40),
-  wallWide: S(-7.5, 5.4, 5.5, -14.8, 4.8, -4.2, 48), wallClose: S(-14.55, 4.55, -0.85, -15.9, 4.36, -2, 34),
+  wallWide: S(-7.5, 5.4, 5.5, -14.8, 4.8, -4.2, 48), wallClose: S(-14.55, 4.55, -0.85, -15.9, 4.36, -2, 34, true),
   heatSources: S(-1, 6.2, 11, -5, 0.8, 1, 44),
-  wifiOver: S(-10.6, 2.7, 2.6, -15.2, 2.6, -1.7, 56), wifiRouter: S(-10.5, 5.3, 6, -15.5, 5.2, 1.2, 46),
-  orient: S(-13.6, 4.75, -0.3, -15.65, 4.6, -2.35, 40),
-  acWide: S(-3.5, 5.8, 8.5, -14.2, 4.6, -4.6, 48), acClose: S(-11.2, 5.4, -2.6, -15.6, 6.0, -6.6, 44),
-  remote: S(-10.2, 2.6, 3.6, -14.6, 2.5, -1.0, 56),
+  wifiOver: S(-10.6, 2.7, 2.6, -15.2, 2.6, -1.7, 56, true), wifiRouter: S(-10.5, 5.3, 6, -15.5, 5.2, 1.2, 46),
+  orient: S(-13.6, 4.75, -0.3, -15.65, 4.6, -2.35, 40, true),
+  acWide: S(-3.5, 5.8, 8.5, -14.2, 4.6, -4.6, 48), acClose: S(-11.2, 5.4, -2.6, -15.6, 6.0, -6.6, 44, true),
+  remote: S(-10.2, 2.6, 3.6, -14.6, 2.5, -1.0, 56, true),
   esc: S(3.5, 6.5, 10, 11.6, 1.2, 0.5, 44),
-  top: S(0.01, 34, 4, 0, 0, -0.5, 44), queue: S(-0.6, 3.4, 9.6, -6, 1.1, 3.4, 42),
+  top: S(0.01, 34, 4, 0, 0, -0.5, 44), queue: S(-0.6, 3.4, 9.6, -6, 1.1, 3.4, 42, true),
   zones: S(0, 27, 23, 0, 0, -1, 46), night: S(13, 10, 17, -2, 1, -2, 44),
   screen: S(0, 6.6, 10.5, 0, 6.6, 1.2, 46), end: S(22, 17, 28, -1, 2, -3, 42)
 };
@@ -557,8 +608,8 @@ function resetWorld() {
 }
 function setNight(on) {
   world.night = on;
-  hemi.intensity = on ? 0.12 : 1.05; sun.intensity = on ? 0 : 1.7;
-  scene.environmentIntensity = on ? 0.08 : 0.55;
+  hemi.intensity = on ? 0.12 : 0.85; sun.intensity = on ? 0 : 1.7;
+  scene.environmentIntensity = on ? 0.06 : ENV_DAY;
   signMats.forEach(function (m) { m.emissiveIntensity = on ? 0.6 : 0.35; });
   interiorMats.forEach(function (m) { m.emissiveIntensity = on ? 0.05 : 0.55; });
   sunPatch.visible = !on;                       // no sun after hours
@@ -605,11 +656,11 @@ var CHAPTERS = [
     { shot: 'heatSources', act: function () { fixedMarks = [{ pos: espresso.getWorldPosition(V()).add(V(0, 0.4, 0)), label: 'espresso machine', cls: 'no' }, { pos: sunPatch.position.clone(), label: 'sunlit floor', cls: 'no', size: 60 }]; },
       say: 'Keep heat sources out of its view where you can. Coffee machines, heaters and sunny glass all glow, just like people do.' }
   ] },
-  { id: 'wifi', title: 'Wi-Fi', setup: function () { hud.el.hidden = true; specials.tech.visible = true; fixedMarks = [SENSOR_TAG()]; }, lines: [
+  { id: 'wifi', title: 'Wi-Fi', setup: function () { specials.tech.visible = true; fixedMarks = [SENSOR_TAG()]; }, lines: [
     { shot: 'wifiOver', say: 'Step two: Wi-Fi. Open Bloom in Chrome, at thermal dot gpunet dot in, and stand near the sensor.' },
     { act: function () { btPulses(); }, say: 'Press Device Wi-Fi, then Connect to device, and pick the sensor from Chrome’s Bluetooth list.' },
     { act: function () { btPulses(); }, say: 'Scan for networks, choose yours, type the password, and press Save and connect. Company networks with a username and password work too.' },
-    { shot: 'wifiRouter', act: function () { wifiPulses(); setTimeout(function () { if (current === 2) { hud.el.hidden = false; logLine('sensor connected: live values'); } }, 1600); },
+    { shot: 'wifiRouter', act: function () { wifiPulses(); setTimeout(function () { if (current === 2) logLine('sensor connected: live values'); }, 1700); },
       say: 'The password goes straight to the sensor over Bluetooth. Bloom’s server never sees it. The sensor restarts, joins the network, and goes live.' }
   ] },
   { id: 'orient', title: 'Orientation', setup: function () { gizmo.visible = true; }, lines: [
@@ -618,7 +669,7 @@ var CHAPTERS = [
   ] },
   { id: 'heat', title: 'Seeing heat', setup: function () { setCrowd(14); }, lines: [
     { shot: POV, say: 'Now, look through its eyes.' },
-    { act: function () { setThermal(true); }, say: 'It doesn’t see light. It sees heat: a grid of thirty-two by twenty-four temperatures, about twice every second.' },
+    { say: 'It doesn’t see light. It sees heat: a grid of thirty-two by twenty-four temperatures, about twice every second.' },
     { say: 'Floors and walls read cool. The air-conditioner reads cold. People glow, at around thirty-three degrees.' },
     { say: 'And that is all it ever sees. Warm shapes. No faces, no screens, nothing that identifies anyone.' }
   ] },
@@ -639,7 +690,7 @@ var CHAPTERS = [
   ] },
   { id: 'remote', title: 'The remote', setup: function () { setCrowd(8); specials.remote.visible = true; setAC(true, '1 in the room'); fixedMarks = [SENSOR_TAG()]; }, lines: [
     { shot: 'remote', say: 'How does it know the AC’s codes? You teach it, once.' },
-    { act: function () { remotePulse(); setTimeout(function () { if (current === 7) logLine('learned: Power'); }, 1400); },
+    { act: function () { setTimeout(function () { if (current === 7) logLine('learned: Power'); }, 3400); },
       say: 'Hold a button in Bloom’s Remote panel until it reads press remote. Point the real remote at the sensor, press the same button, and it is learned.' },
     { act: function () { remotePulse(); setTimeout(function () { if (current === 7) { setAC(false, 'remote: power'); logLine('AC OFF: remote: power'); } }, 1400); },
       say: 'It listens, too. If someone switches the AC off with its remote, Bloom hears it, and stays in step.' }
@@ -688,6 +739,105 @@ function prewarmHeatmap() {
 }
 var gizmoSpin = 0, rotSteps = 0, rotTimer = 0, nightWalk = 0;
 
+/* ================================================================ Bloom on the tablet
+   A replica of Bloom's real controls with an animated cursor, so every instruction the
+   narrator gives is also shown being done: which button, in which order, what changes. */
+var tbScreen = $('#tb-screen'), tbCursor = $('#tb-cursor'), uiToken = 0;
+function ui(name) { return tbScreen.querySelector('[data-ui="' + name + '"]'); }
+function tbView(v) { tbScreen.dataset.view = v; }
+function tbStatus(live) {
+  $('#tb-dot').classList.toggle('on', live);
+  $('#tb-status').textContent = live ? 'surds-thermal-7f2a · up ' + Math.round(40 + Math.random() * 600) + 's' : 'waiting for device';
+}
+function tbReset() {
+  uiToken++;
+  tbCursor.className = 'tb-cursor';
+  $('#tb-wifi').hidden = true; $('#tb-chooser').hidden = true; $('#tb-nets').hidden = true;
+  ui('ssid').textContent = ''; ui('pass').textContent = '';
+  $('#tb-wifi-note').textContent = 'The password goes straight to the device over Bluetooth; the server never sees it.';
+  $('#tb-wifi-note').className = 'tb-note';
+  tbScreen.querySelectorAll('.sel,.hl,.press,.on,.learning,.flash').forEach(function (e) { e.classList.remove('sel', 'hl', 'press', 'on', 'learning', 'flash'); });
+  ui('frame').textContent = 'Show thermal view';
+  ui('rotate').textContent = 'Rotate view 0°'; ui('rpy').textContent = '12° · −31° · 47°';
+  ui('room-val').textContent = '24'; ui('delay-val').textContent = '0';
+  var pw = ui('rb-power'); pw.classList.remove('mapped'); pw.lastChild.textContent = 'hold to learn';
+}
+function pause(ms, tok) { return new Promise(function (res, rej) { setTimeout(function () { tok === uiToken ? res() : rej('stale'); }, REDUCED ? Math.min(ms, 60) : ms); }); }
+async function moveTo(el, tok) {
+  var r = el.getBoundingClientRect(), s = tbScreen.getBoundingClientRect(), k = s.width / tbScreen.offsetWidth;
+  var x = (r.left - s.left + Math.min(r.width * 0.6, 40)) / k, y = (r.top - s.top + r.height * 0.55) / k;
+  tbCursor.classList.add('show');
+  tbCursor.style.transform = 'translate(' + x.toFixed(0) + 'px,' + y.toFixed(0) + 'px)';
+  await pause(760, tok);
+}
+async function press(name, tok, after) {
+  var el = ui(name); await moveTo(el, tok);
+  el.classList.add('hl', 'press');
+  tbCursor.classList.remove('click'); void tbCursor.offsetWidth; tbCursor.classList.add('click');
+  await pause(170, tok); el.classList.remove('press');
+  if (after) after(el);
+  await pause(420, tok); el.classList.remove('hl');
+}
+async function point(name, tok, ms) { var el = ui(name); await moveTo(el, tok); el.classList.add('hl'); await pause(ms || 2200, tok); el.classList.remove('hl'); }
+async function typeIn(name, text, tok, mask) {
+  var el = ui(name); await press(name, tok);
+  el.textContent = ''; el.classList.add('hl');
+  for (var i = 0; i < text.length; i++) { el.textContent += mask ? '•' : text[i]; await pause(85, tok); }
+  await pause(300, tok); el.classList.remove('hl');
+}
+function uiRun(fn) { var tok = ++uiToken; fn(tok).catch(function () {}); }
+
+var TB = {   // chapter id -> [tablet setup, per-line cursor scripts]
+  wifi: [function () { tbView('room'); tbStatus(false); }, [
+    async function (t) { await pause(900, t); await press('wifi', t, function () { $('#tb-wifi').hidden = false; }); },
+    async function (t) { await pause(400, t); await press('ble-connect', t, function () { $('#tb-chooser').hidden = false; });
+      await pause(500, t); await press('ble-dev', t, function (e) { e.classList.add('sel'); });
+      await press('ble-pair', t, function () { $('#tb-chooser').hidden = true; var n = $('#tb-wifi-note'); n.textContent = 'Connected to SURDS-Thermal-7F2A over Bluetooth.'; n.className = 'tb-note ok'; }); },
+    async function (t) { await press('ble-scan', t, function () { $('#tb-nets').hidden = false; });
+      await pause(400, t); await press('net-staff', t, function (e) { e.classList.add('sel'); ui('ssid').textContent = 'MALL-STAFF'; });
+      await typeIn('pass', 'mallstaff2026', t, true);
+      await press('ble-save', t, function () { var n = $('#tb-wifi-note'); n.textContent = 'Saved. The sensor restarts and joins MALL-STAFF…'; n.className = 'tb-note ok'; }); },
+    async function (t) { await pause(1600, t); $('#tb-wifi').hidden = true; tbCursor.classList.remove('show'); tbStatus(true); }
+  ]],
+  orient: [function () { tbView('orient'); tbStatus(true); }, [
+    async function (t) { await pause(700, t); await press('facedown', t, function () { ui('rpy').textContent = '0° · 0° · 47°'; });
+      await pause(500, t); await press('yaw0', t, function () { ui('rpy').textContent = '0° · 0° · 0°'; }); },
+    async function (t) { for (var k = 1; k <= 3; k++) { await pause(500, t); await press('rotate', t, function (e) { e.textContent = 'Rotate view ' + (k * 90) + '°'; rotSteps = k; }); } }
+  ]],
+  heat: [function () { tbView('room'); tbStatus(true); }, [
+    null,
+    async function (t) { await press('frame', t, function (e) { e.textContent = 'Hide thermal view'; e.classList.add('on'); setThermal(true); }); }
+  ]],
+  count: [function () { tbView('room'); tbStatus(true); ui('frame').textContent = 'Hide thermal view'; ui('frame').classList.add('on'); }, [
+    null, async function (t) { await pause(600, t); await point('thr', t, 3200); },
+    async function (t) { await pause(600, t); await point('pread', t, 3000); }
+  ]],
+  ac: [function () { tbView('ac'); tbStatus(true); }, [
+    async function (t) { await pause(1200, t); await press('auto', t, function (e) { e.classList.add('on'); }); },
+    async function (t) { await point('r-occ', t, 900); await point('r-people', t, 900); await press('r-room', t, function (e) { e.classList.add('on'); });
+      await typeIn('room-val', '26', t); await typeIn('delay-val', '120', t); },
+    null, null, null
+  ]],
+  remote: [function () { tbView('remote'); tbStatus(true); }, [
+    null,
+    async function (t) { var pw = ui('rb-power'); await moveTo(pw, t); tbCursor.classList.add('hold'); pw.classList.add('hl');
+      await pause(700, t); pw.classList.add('learning'); pw.lastChild.textContent = 'press remote…'; remotePulse();
+      await pause(1700, t); tbCursor.classList.remove('hold'); pw.classList.remove('learning', 'hl'); pw.classList.add('mapped', 'flash'); pw.lastChild.textContent = 'toggle AC';
+      await pause(500, t); pw.classList.remove('flash'); },
+    null
+  ]],
+  hot: [function () { tbView('room'); tbStatus(true); }, [ null, async function (t) { await pause(900, t); await point('hot', t, 3600); } ]],
+  uses: [function () { tbView('room'); tbStatus(true); }, []]
+};
+var STEPS = { mount: [1, 'Mount the sensor'], wifi: [2, 'Connect it to Wi-Fi'], orient: [3, 'Set its orientation'], ac: [4, 'Switch on the AC rules'], remote: [5, 'Teach it your remote'] };
+var LEARN = { intro: 'Welcome', heat: 'How it sees', count: 'How it counts', hot: 'What else it watches', uses: 'Where it helps', bloom: 'Where it all shows up' };
+function stepCard(id) {
+  var card = $('#step-card');
+  if (STEPS[id]) { $('#step-num').textContent = 'Step ' + STEPS[id][0] + ' of 5'; $('#step-text').textContent = STEPS[id][1]; }
+  else { $('#step-num').textContent = 'How it works'; $('#step-text').textContent = LEARN[id] || ''; }
+  card.hidden = id === 'intro' || id === 'bloom';
+}
+
 /* ================================================================ player */
 var current = -1, lineIdx = -1, playing = false, voiceOn = true, ccOn = true, lineTimer = null, lineToken = 0;
 var chapterNav = $('#chapters');
@@ -706,6 +856,7 @@ function titleCard(i) {
   var tc = $('#title-card');
   $('#tc-num').textContent = (i < 9 ? '0' : '') + (i + 1) + ' / ' + CHAPTERS.length;
   $('#tc-title').textContent = CHAPTERS[i].title;
+  var st = STEPS[CHAPTERS[i].id]; $('#tc-num').textContent = st ? 'STEP ' + st[0] + ' OF 5' : (i < 9 ? '0' : '') + (i + 1) + ' / ' + CHAPTERS.length;
   tc.classList.add('show'); setTimeout(function () { tc.classList.remove('show'); }, 1900);
 }
 function startChapter(i) {
@@ -714,7 +865,10 @@ function startChapter(i) {
   current = i; lineIdx = -1;
   resetWorld();
   if (i > 0) hud.el.hidden = false;
+  tbReset();
   CHAPTERS[i].setup();
+  if (TB[CHAPTERS[i].id]) { hud.el.hidden = false; TB[CHAPTERS[i].id][0](); } else tbView('room');
+  stepCard(CHAPTERS[i].id);
   titleCard(i);
   navState();
   setTimeout(function () { if (current === i && lineIdx === -1) nextLine(); }, REDUCED ? 50 : 1200);
@@ -730,6 +884,8 @@ function nextLine() {
   var ln = ch.lines[lineIdx];
   if (ln.shot) shot(typeof ln.shot === 'string' ? SHOTS[ln.shot] : ln.shot, lineIdx === 0 ? 3.2 : 2.6);
   if (ln.act) ln.act();
+  var tbl = TB[ch.id] && TB[ch.id][1][lineIdx];
+  if (tbl) uiRun(tbl);
   var text = typeof ln.say === 'function' ? ln.say() : ln.say;
   $('#caption-text').textContent = text;
   navState();
@@ -794,7 +950,11 @@ document.addEventListener('keydown', function (e) {
 $('#replay').addEventListener('click', function () { startChapter(0); setPlaying(true); });
 
 /* ================================================================ loop */
-var last = performance.now(), frameNo = 0;
+var last = performance.now(), frameNo = 0, slowFrames = 0;
+function adaptQuality(dt) {   // keep it smooth: drop resolution a step if frames run long
+  slowFrames = dt > 0.034 ? slowFrames + 1 : Math.max(0, slowFrames - 2);
+  if (slowFrames > 90 && quality > 1) { quality = Math.max(1, quality - 0.25); slowFrames = 0; resize(); }
+}
 function frame(now) {
   var dt = Math.min(0.05, (now - last) / 1000); last = now;
   updateWalkers(dt);
@@ -808,11 +968,20 @@ function frame(now) {
   zones.forEach(function (z) { if (z.mesh.visible) z.mesh.material.opacity = lerp(z.mesh.material.opacity, z.name === 'Zone C' ? 0.12 : 0.22, 1 - Math.pow(0.05, dt)); });
   if (screen.visible) screen.material.opacity = lerp(screen.material.opacity, 1, 1 - Math.pow(0.02, dt));
   if (gizmo.visible && gizmoSpin > 0) { gizmoSpin = Math.max(0, gizmoSpin - dt * 0.45); gizmo.rotation.set(Math.sin(now / 300) * 0.5 * gizmoSpin, gizmoSpin * 2.2, Math.cos(now / 340) * 0.4 * gizmoSpin); }
-  if (rotPanel.visible) { rotTimer += dt; if (rotTimer > 1.4 && rotSteps < 3) { rotTimer = 0; rotSteps++; } rotPanel.rotation.z = lerp(rotPanel.rotation.z, rotSteps * Math.PI / 2, 1 - Math.pow(0.01, dt)); }
+  if (rotPanel.visible) { rotPanel.rotation.z = lerp(rotPanel.rotation.z, rotSteps * Math.PI / 2, 1 - Math.pow(0.01, dt)); }
   if (specials.night && specials.night.visible) { nightWalk += dt * 0.9; specials.night.position.set(9 - nightWalk, 0, 6 - nightWalk * 0.6); }
   if (world.thermal) scene.background.lerp(THERMAL_BG, 0.2); else scene.background.lerp(world.night ? NIGHT_BG : DAY_BG, 0.08);
   scene.fog.color.copy(scene.background);
-  renderer.render(scene, camera);
+  actors.forEach(function (h) { if (h.obj.visible) updateHuman(h, dt, h.speed); });
+  if (specials.night && specials.night.visible) specials.night.rotation.y = Math.atan2(-1, -0.6);
+  if (world.thermal) renderer.render(scene, camera);
+  else {
+    bokehPass.enabled = !!(cam.to && cam.to.dof) && !REDUCED;
+    if (bokehPass.enabled) bokehPass.uniforms.focus.value = camera.position.distanceTo(cam.look);
+    gradePass.uniforms.uTime.value = now / 1000;
+    composer.render(dt);
+    adaptQuality(dt);
+  }
   updateMarks();
   requestAnimationFrame(frame);
 }
@@ -822,15 +991,21 @@ var playBtn = $('#play-btn'), playLabel = $('#play-label');
 var gl = new GLTFLoader(); gl.setMeshoptDecoder(MeshoptDecoder);
 var mgr = THREE.DefaultLoadingManager;
 mgr.onProgress = function (url, loaded, total) { playLabel.textContent = 'Loading the mall… ' + Math.round(loaded / Math.max(1, total) * 100) + '%'; };
-loadPeople(gl, '/views/explore/assets/people.glb?v=4').then(function () {
+function boot() {
   setupPeople();
   resetWorld(); setMount(0); hud.el.hidden = true; setCrowd(18);
   shot(SHOTS.aerial, 0.01);
   requestAnimationFrame(frame);
   playBtn.disabled = false; playLabel.textContent = 'Play the tour';
-}).catch(function (err) {
+}
+/* The free rigged models tried for "real" people (three.js examples: Michelle, Soldier,
+   a Ready Player Me avatar) either deform under borrowed Mixamo clips or look like
+   soldiers, so the film uses the clean posed figures until proper character assets
+   (scanned or Mixamo shoppers) are added. humans.js stays ready for them. */
+USE_REAL = false;
+loadPeople(gl, '/views/explore/assets/people.glb?v=4').then(boot).catch(function (err) {
   console.error(err);
-  playLabel.textContent = 'Could not load the people models. Reload to try again.';
+  playLabel.textContent = 'Could not load the people. Reload to try again.';
 });
 playBtn.addEventListener('click', function () {
   $('#start').hidden = true;

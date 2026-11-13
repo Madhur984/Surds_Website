@@ -32,18 +32,88 @@
   <a class="guide-link" href="/guide">Step-by-step guide</a>
 </header>
 
-<!-- live Bloom HUD -->
-<aside class="hud" id="hud" aria-label="Bloom, live" hidden>
-  <p class="hud-head"><i class="dot on"></i>Bloom · live</p>
-  <div class="hud-grid">
-    <div><span>People in zone</span><b id="h-people">0</b></div>
-    <div><span>Room</span><b id="h-room">24.0 °C</b></div>
-    <div><span>People read</span><b id="h-pread">–</b></div>
-    <div><span>Hottest point</span><b id="h-hot">31.0 °C</b></div>
+<!-- Bloom, as it looks on the installer's tablet: a faithful replica of the real controls,
+     driven by an animated cursor so viewers see exactly what to press -->
+<aside class="tablet" id="hud" aria-label="Bloom on the tablet" hidden>
+  <div class="tb-screen" id="tb-screen">
+    <header class="tb-top">
+      <div class="tb-brand"><b>Bloom</b><small>THERMAL ROOM · LIVE</small></div>
+      <span class="tb-pill" id="tb-pill"><i class="dot" id="tb-dot"></i><span id="tb-status">waiting for device</span></span>
+    </header>
+    <div class="tb-actions">
+      <button type="button" class="tb-btn" data-ui="analytics">Analytics</button>
+      <button type="button" class="tb-btn" data-ui="wifi">Device Wi-Fi</button>
+      <button type="button" class="tb-btn" data-ui="frame">Show thermal view</button>
+    </div>
+
+    <section class="tb-panel" data-view="room">
+      <h3>Room</h3>
+      <div class="tb-big"><div><b id="h-people">0</b><small>people</small></div><div><b id="h-room">24.0</b><small>room °C</small></div></div>
+      <p class="tb-row" data-ui="pread"><span>People in the zone</span><b id="h-pread">–</b></p>
+      <p class="tb-row" data-ui="hot"><span>Hottest point</span><b id="h-hot">31.0 °C</b></p>
+      <p class="tb-row"><span>Sensor board</span><b>30.0 °C</b></p>
+      <p class="tb-row" data-ui="thr"><span>Blob threshold</span><b class="tb-in">2</b><em>°C</em></p>
+    </section>
+
+    <section class="tb-panel" data-view="orient">
+      <h3>Device orientation <button type="button" class="tb-chip" data-ui="yaw0">zero yaw</button></h3>
+      <div class="tb-chips">
+        <button type="button" class="tb-chip" data-ui="facedown">Set as facing down</button>
+        <button type="button" class="tb-chip" data-ui="rotate">Rotate view 0°</button>
+      </div>
+      <p class="tb-row"><span>Roll · pitch · yaw</span><b class="mono" data-ui="rpy">12° · −31° · 47°</b></p>
+    </section>
+
+    <section class="tb-panel" data-view="ac">
+      <h3>Air conditioning</h3>
+      <div class="tb-ac"><span class="orb" id="h-orb">OFF</span><div><b id="h-acword">Off</b><small id="h-acwhy">no rule holds</small></div></div>
+      <div class="tb-chips"><button type="button" class="tb-chip">Turn on</button><button type="button" class="tb-chip">Turn off</button></div>
+      <p class="tb-row sw" data-ui="auto"><span>Automatic</span><i class="tb-sw"></i></p>
+      <p class="tb-row sw" data-ui="r-occ"><span>On when someone is in</span><i class="tb-sw"></i></p>
+      <p class="tb-row sw" data-ui="r-people"><span>On when people read ≥</span><b class="tb-in">22</b><em>°C</em><i class="tb-sw"></i></p>
+      <p class="tb-row sw" data-ui="r-room"><span>On when room ≥</span><b class="tb-in" data-ui="room-val">24</b><em>°C</em><i class="tb-sw"></i></p>
+      <p class="tb-row" data-ui="delay"><span>Off after empty for</span><b class="tb-in" data-ui="delay-val">0</b><em>s</em></p>
+    </section>
+
+    <section class="tb-panel" data-view="remote">
+      <h3>Remote <small>IR receiver · tap to press, hold to learn</small></h3>
+      <div class="tb-remote">
+        <button type="button" class="tb-rb" data-ui="rb-power">Power<small>hold to learn</small></button>
+        <button type="button" class="tb-rb">Mode<small>hold to learn</small></button>
+        <button type="button" class="tb-rb">Temp +<small>hold to learn</small></button>
+        <button type="button" class="tb-rb">Temp −<small>hold to learn</small></button>
+      </div>
+    </section>
+
+    <ol class="tb-log" id="h-log"></ol>
+
+    <!-- the Device Wi-Fi window -->
+    <div class="tb-dialog" id="tb-wifi" hidden>
+      <h4>Set up device Wi-Fi <small>over Bluetooth</small></h4>
+      <p class="tb-hint">Bring your phone or laptop near the thermal node, then connect.</p>
+      <button type="button" class="tb-btn primary" data-ui="ble-connect">Connect to device</button>
+      <button type="button" class="tb-btn" data-ui="ble-scan">Scan for networks</button>
+      <ul class="tb-nets" id="tb-nets" hidden><li data-ui="net-staff">MALL-STAFF <i>▂▄▆█</i></li><li>MALL-GUEST <i>▂▄▆</i></li><li>KIOSK-POS <i>▂▄</i></li></ul>
+      <label>Network name (SSID)<span class="tb-field" data-ui="ssid"></span></label>
+      <label>Security<span class="tb-field sel">WPA2 / WPA3 Personal (password)</span></label>
+      <label>Password<span class="tb-field" data-ui="pass"></span></label>
+      <div class="tb-dlg-row"><button type="button" class="tb-btn primary" data-ui="ble-save">Save and connect</button><button type="button" class="tb-btn">Forget Wi-Fi</button></div>
+      <p class="tb-note" id="tb-wifi-note">The password goes straight to the device over Bluetooth; the server never sees it.</p>
+    </div>
+    <!-- Chrome's Bluetooth picker -->
+    <div class="tb-chooser" id="tb-chooser" hidden>
+      <p><b>thermal.gpunet.in</b> wants to pair</p>
+      <ul><li data-ui="ble-dev">SURDS-Thermal-7F2A</li><li class="dim">Unknown device</li></ul>
+      <div class="tb-dlg-row end"><button type="button" class="tb-btn">Cancel</button><button type="button" class="tb-btn primary" data-ui="ble-pair">Pair</button></div>
+    </div>
+
+    <div class="tb-cursor" id="tb-cursor" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 2l16 9-7 2-3 7z"/></svg><i></i></div>
   </div>
-  <div class="hud-ac"><span class="orb" id="h-orb">OFF</span><div><b id="h-acword">AC off</b><small id="h-acwhy">no rule holds</small></div></div>
-  <ol class="hud-log" id="h-log"></ol>
+  <p class="tb-caption" id="tb-caption">Bloom · on the installer's tablet</p>
 </aside>
+
+<!-- the step being taught -->
+<div class="step-card" id="step-card" hidden><span id="step-num">Step 1 of 5</span><b id="step-text">Mount the sensor</b></div>
 
 <!-- caption -->
 <div class="caption" id="caption" aria-live="polite"><p id="caption-text"></p></div>
