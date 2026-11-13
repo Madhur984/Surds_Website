@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SURDS Thermal | The cinematic tutorial</title>
+<meta name="description" content="A narrated, cinematic tour of SURDS Thermal and Bloom: the sensor is mounted on a mall wall, connected, and shown counting people, running the AC, spotting hot equipment and every other use case.">
+<link rel="icon" href="/shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/views/film/film.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+} }
+</script>
+<script type="module" src="/views/film/film.js"></script>
+</head>
+<body>
+
+<canvas id="stage" aria-label="Cinematic 3D tour of a shopping mall with the SURDS Thermal sensor"></canvas>
+<div class="marks" id="marks" aria-hidden="true"></div>
+<div class="bars" aria-hidden="true"><i></i><i></i></div>
+<div class="scanline" id="scanline" aria-hidden="true"></div>
+
+<!-- chapter title card -->
+<div class="title-card" id="title-card" aria-hidden="true"><span id="tc-num">01</span><b id="tc-title">Mount</b></div>
+
+<!-- top: brand + chapters -->
+<header class="top">
+  <a class="brand" href="/guide"><b>SURDS Thermal</b><span>The film</span></a>
+  <nav class="chapters" id="chapters" aria-label="Chapters"></nav>
+  <a class="guide-link" href="/guide">Step-by-step guide</a>
+</header>
+
+<!-- live Bloom HUD -->
+<aside class="hud" id="hud" aria-label="Bloom, live" hidden>
+  <p class="hud-head"><i class="dot on"></i>Bloom · live</p>
+  <div class="hud-grid">
+    <div><span>People in zone</span><b id="h-people">0</b></div>
+    <div><span>Room</span><b id="h-room">24.0 °C</b></div>
+    <div><span>People read</span><b id="h-pread">–</b></div>
+    <div><span>Hottest point</span><b id="h-hot">31.0 °C</b></div>
+  </div>
+  <div class="hud-ac"><span class="orb" id="h-orb">OFF</span><div><b id="h-acword">AC off</b><small id="h-acwhy">no rule holds</small></div></div>
+  <ol class="hud-log" id="h-log"></ol>
+</aside>
+
+<!-- caption -->
+<div class="caption" id="caption" aria-live="polite"><p id="caption-text"></p></div>
+
+<!-- controls -->
+<div class="controls" id="controls">
+  <button type="button" class="ctl" id="btn-prev" aria-label="Previous chapter"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12 5 7 10l5 5"/></svg></button>
+  <button type="button" class="ctl big" id="btn-play" aria-label="Pause"><svg class="i-pause" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10"/></svg><svg class="i-play" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5l8 5-8 5z"/></svg></button>
+  <button type="button" class="ctl" id="btn-next" aria-label="Next chapter"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m8 5 5 5-5 5"/></svg></button>
+  <div class="progress" aria-hidden="true"><i id="progress"></i></div>
+  <button type="button" class="ctl toggle on" id="btn-voice" aria-pressed="true">Voice</button>
+  <button type="button" class="ctl toggle on" id="btn-cc" aria-pressed="true">Captions</button>
+</div>
+
+<!-- start / end overlays -->
+<div class="overlay" id="start">
+  <div class="ov-card">
+    <p class="ov-eyebrow">SURDS Thermal · running Bloom</p>
+    <h1>A sensor, a mall, and an afternoon of heat.</h1>
+    <p class="ov-lede">Watch it get mounted on a mall wall, connected, and put to work. A voice talks you through what it is doing and how, chapter by chapter. About four minutes.</p>
+    <button type="button" class="play-btn" id="play-btn" disabled><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5l8 5-8 5z"/></svg><span id="play-label">Loading the mall… 0%</span></button>
+    <p class="ov-small">Sound on for the narration. You can switch the voice off any time; captions stay.</p>
+    <a class="ov-link" href="/guide">Prefer reading? Open the step-by-step guide</a>
+  </div>
+</div>
+
+<div class="overlay" id="end" hidden>
+  <div class="ov-card">
+    <p class="ov-eyebrow">That's SURDS Thermal</p>
+    <h2>It sees heat, counts people, and runs the AC on its own.</h2>
+    <div class="ov-actions">
+      <a class="play-btn" href="https://thermal.gpunet.in" target="_blank" rel="noopener">Open Bloom</a>
+      <a class="ghost-btn" href="/guide">Read the step-by-step guide</a>
+      <button type="button" class="ghost-btn" id="replay">Watch again</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

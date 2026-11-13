@@ -25,8 +25,9 @@ ROUTES = {
     "/classic": "/views/main/index.html",
     "/enterprise": "/views/enterprise/index.html",
     "/card-tour": "/views/card-tour/index.html",
-    "/tutorial": "/views/tutorial/index.html",
-    "/product": "/views/tutorial/index.html",     # the product site is now the Bloom tutorial
+    "/tutorial": "/views/film/index.html",        # the cinematic tutorial
+    "/product": "/views/film/index.html",
+    "/guide": "/views/tutorial/index.html",       # the step-by-step guide
     "/gateway": "/views/gateway/index.html",
     "/survey": "/survey.html",
     "/data-center": "/views/data-center/index.html",

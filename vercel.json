@@ -22,10 +22,14 @@
     },
     {
       "source": "/tutorial",
-      "destination": "/views/tutorial/index.html"
+      "destination": "/views/film/index.html"
     },
     {
       "source": "/product",
+      "destination": "/views/film/index.html"
+    },
+    {
+      "source": "/guide",
       "destination": "/views/tutorial/index.html"
     },
     {

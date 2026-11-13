@@ -39,6 +39,8 @@ code{font-family:var(--mono);font-size:.84em;background:rgba(39,63,79,.07);paddi
 .brand span{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--orange-deep)}
 .topbar-progress{flex:1;max-width:420px;height:6px;border-radius:3px;background:rgba(39,63,79,.1);overflow:hidden;margin-left:auto}
 .topbar-progress i{display:block;height:100%;width:0;background:var(--orange);border-radius:3px;transition:width .5s var(--ease)}
+.film-link{font-size:14px;font-weight:700;color:var(--navy);text-decoration:none;white-space:nowrap;padding:0 6px}
+.film-link:hover{color:var(--orange-deep)}
 .open-app{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:12px;background:var(--orange);color:#fff;font-weight:700;font-size:14px;text-decoration:none;white-space:nowrap}
 .open-app:hover{background:var(--orange-deep)}
 .icon-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);display:none;align-items:center;justify-content:center}
