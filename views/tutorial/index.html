@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloom Thermal | Complete tutorial</title>
+<meta name="description" content="Step-by-step tutorial for Bloom Thermal: connect the thermal node to Wi-Fi, read the room, automate the AC, teach it your remote and use Analytics.">
+<link rel="icon" href="/shared/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/views/tutorial/tutorial.css">
+<script src="/views/tutorial/tutorial.js" defer></script>
+</head>
+<body>
+
+<a class="skip-link" href="#content">Skip to the tutorial</a>
+
+<header class="topbar">
+  <button class="icon-btn menu-btn" id="menu-btn" type="button" aria-label="Open chapters" aria-expanded="false" aria-controls="toc">
+    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6h14M3 10h14M3 14h14"/></svg>
+  </button>
+  <a href="#start" class="brand"><b>Bloom</b><span>Thermal tutorial</span></a>
+  <div class="topbar-progress" aria-hidden="true"><i id="top-progress"></i></div>
+  <a class="open-app" href="https://thermal.gpunet.in" target="_blank" rel="noopener">Open Bloom <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 12 12 4M5.5 4H12v6.5"/></svg></a>
+</header>
+
+<div class="layout">
+
+  <!-- ============ CHAPTER LIST ============ -->
+  <nav class="toc" id="toc" aria-label="Tutorial chapters">
+    <p class="toc-progress"><span id="done-count">0</span> of <span id="total-count">13</span> chapters done</p>
+    <ol>
+      <li><a href="#start" data-ch="start"><i></i>Start here</a></li>
+      <li><a href="#need" data-ch="need"><i></i>What you need</a></li>
+      <li><a href="#tour" data-ch="tour"><i></i>Tour of the screen</a></li>
+      <li><a href="#wifi" data-ch="wifi"><i></i>Connect to Wi-Fi</a></li>
+      <li><a href="#status" data-ch="status"><i></i>Is it live?</a></li>
+      <li><a href="#mount" data-ch="mount"><i></i>Mount and orient</a></li>
+      <li><a href="#room" data-ch="room"><i></i>Read the room</a></li>
+      <li><a href="#thermal" data-ch="thermal"><i></i>The thermal view</a></li>
+      <li><a href="#ac" data-ch="ac"><i></i>Automate the AC</a></li>
+      <li><a href="#remote" data-ch="remote"><i></i>Teach your remote</a></li>
+      <li><a href="#log" data-ch="log"><i></i>Read the event log</a></li>
+      <li><a href="#analytics" data-ch="analytics"><i></i>Analytics</a></li>
+      <li><a href="#trouble" data-ch="trouble"><i></i>Troubleshooting</a></li>
+    </ol>
+    <button type="button" class="reset-progress" id="reset-progress">Reset progress</button>
+  </nav>
+
+  <main id="content">
+
+    <!-- ===================================================== 0 -->
+    <section class="chapter hero" id="start" data-ch="start">
+      <p class="eyebrow">Bloom Thermal · Complete tutorial</p>
+      <h1>Learn Bloom in one sitting.</h1>
+      <p class="lede">Bloom watches a room through a small thermal sensor, counts the people in it by their body heat, and switches the air conditioning for you through infrared, the same way your remote does. This tutorial takes you from an unboxed sensor to a room that runs itself.</p>
+
+      <div class="what-grid">
+        <div class="what"><span class="what-n">1</span><h3>It sees heat</h3><p>A 32 × 24 grid of temperatures, about two frames a second. Never a picture, never a face.</p></div>
+        <div class="what"><span class="what-n">2</span><h3>It counts people</h3><p>Warm patches become people. It knows how many are in, and how warm they read.</p></div>
+        <div class="what"><span class="what-n">3</span><h3>It runs the AC</h3><p>Simple rules you set decide when the AC turns on and off, and every decision is logged with its reason.</p></div>
+      </div>
+
+      <div class="callout tip">
+        <b>How to use this tutorial.</b> Work top to bottom, or jump to a chapter from the list. Every chapter ends with <em>Mark as done</em>; your progress is remembered in this browser. The grey <em>Practice</em> boxes are safe copies of Bloom's controls, so try them freely: nothing here touches your real sensor.
+      </div>
+      <div class="cta-row">
+        <a class="btn primary" href="#need">Start the tutorial</a>
+        <a class="btn" href="https://thermal.gpunet.in" target="_blank" rel="noopener">Open Bloom in a new tab</a>
+      </div>
+      <button type="button" class="done-btn" data-done="start">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 1 -->
+    <section class="chapter" id="need" data-ch="need">
+      <p class="eyebrow">Chapter 1</p>
+      <h2>What you need</h2>
+      <p class="lede">Tick each item as you get it ready. Bloom will work in demo mode without the sensor, so you can follow along either way.</p>
+      <ul class="checklist" id="checklist">
+        <li><label><input type="checkbox" data-check="node"><span></span><div><b>The thermal node</b> powered on. It is the small board with the thermal camera, the infrared (IR) receiver and blaster, and an orientation sensor.</div></label></li>
+        <li><label><input type="checkbox" data-check="chrome"><span></span><div><b>Google Chrome</b> on Android, Windows, macOS or Linux. Wi-Fi setup uses Web Bluetooth, which Safari and Firefox do not support. iPhone and iPad cannot do the Bluetooth step.</div></label></li>
+        <li><label><input type="checkbox" data-check="url"><span></span><div><b>The secure address</b>: <code>https://thermal.gpunet.in</code>. Bluetooth only works on the https page.</div></label></li>
+        <li><label><input type="checkbox" data-check="wifi"><span></span><div><b>Your Wi-Fi name and password</b>. For company networks (WPA2/WPA3 Enterprise) you also need your username, and possibly the EAP method from your IT team.</div></label></li>
+        <li><label><input type="checkbox" data-check="remote"><span></span><div><b>The AC's own remote</b>, for teaching Bloom its buttons, and a clear line of sight from the sensor to the AC.</div></label></li>
+      </ul>
+      <p class="check-note" id="check-note">0 of 5 ready.</p>
+      <button type="button" class="done-btn" data-done="need">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 2 -->
+    <section class="chapter" id="tour" data-ch="tour">
+      <p class="eyebrow">Chapter 2</p>
+      <h2>Tour of the screen</h2>
+      <p class="lede">This is Bloom's live view. Tap any number to see what that part does. (Screenshot taken in demo mode, so the values are examples.)</p>
+      <figure class="shot annotated" id="tour-shot">
+        <img src="/views/tutorial/img/bloom-live.webp" width="1440" height="900" alt="Bloom live view: building picture in the middle, Room panel on the left, Air conditioning and Remote on the right, a status strip along the bottom">
+        <button type="button" class="pin" style="left:63%;top:4%" data-pin="0">1</button>
+        <button type="button" class="pin" style="left:75.6%;top:4%" data-pin="1">2</button>
+        <button type="button" class="pin" style="left:83.7%;top:4%" data-pin="2">3</button>
+        <button type="button" class="pin" style="left:93.7%;top:4%" data-pin="3">4</button>
+        <button type="button" class="pin" style="left:50%;top:11.4%" data-pin="4">5</button>
+        <button type="button" class="pin" style="left:11.5%;top:12%" data-pin="5">6</button>
+        <button type="button" class="pin" style="left:8%;top:42.4%" data-pin="6">7</button>
+        <button type="button" class="pin" style="left:34%;top:51%" data-pin="7">8</button>
+        <button type="button" class="pin" style="left:82%;top:12%" data-pin="8">9</button>
+        <button type="button" class="pin" style="left:81%;top:54%" data-pin="9">10</button>
+        <button type="button" class="pin" style="left:88%;top:77%" data-pin="10">11</button>
+        <button type="button" class="pin" style="left:50%;top:90%" data-pin="11">12</button>
+      </figure>
+      <div class="pin-info" id="pin-info" aria-live="polite">
+        <span class="pin-badge" id="pin-badge">1</span>
+        <div><b id="pin-title">Connection status</b><p id="pin-text">Tells you whether Bloom is talking to your sensor.</p></div>
+      </div>
+      <button type="button" class="done-btn" data-done="tour">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 3 -->
+    <section class="chapter" id="wifi" data-ch="wifi">
+      <p class="eyebrow">Chapter 3</p>
+      <h2>Connect the node to Wi-Fi</h2>
+      <p class="lede">The sensor gets its Wi-Fi details from your phone or laptop over Bluetooth. You only do this once per network. The password goes straight to the device; Bloom's server never sees it.</p>
+
+      <div class="split">
+        <ol class="steps">
+          <li><b>Open Bloom in Chrome</b> at <code>https://thermal.gpunet.in</code> and stand near the sensor.</li>
+          <li><b>Press <span class="ui">Device Wi-Fi</span></b> in the top bar. The setup window opens.</li>
+          <li><b>Press <span class="ui primary">Connect to device</span></b>. Chrome shows its Bluetooth list; pick the thermal node and press <em>Pair</em>.</li>
+          <li><b>Press <span class="ui">Scan for networks</span></b> to let the sensor list the networks it can hear, or type the name into <em>Network name (SSID)</em>.</li>
+          <li><b>Choose the Security type</b> your network uses (see the table below) and fill in what it asks for.</li>
+          <li><b>Press <span class="ui primary">Save and connect</span></b>. The sensor saves the details and restarts onto the new network.</li>
+          <li><b>Close</b> the window and watch the status pill: within a minute it should show your device name and <em>up … s</em>.</li>
+        </ol>
+        <figure class="shot annotated narrow">
+          <img src="/views/tutorial/img/bloom-wifi.webp" width="460" height="582" alt="The Set up device Wi-Fi window: Connect to device, Scan for networks, network name, security, password, Save and connect, Forget Wi-Fi and Close">
+          <span class="pin static" style="left:44%;top:22.5%">3</span>
+          <span class="pin static" style="left:43.5%;top:35%">4</span>
+          <span class="pin static" style="left:24%;top:54.3%">5</span>
+          <span class="pin static" style="left:44%;top:80%">6</span>
+        </figure>
+      </div>
+
+      <h3 class="sub-h">Which security type?</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Option in Bloom</th><th>Use it for</th><th>Fields to fill</th></tr></thead>
+          <tbody>
+            <tr><td>WPA2 / WPA3 Personal (password)</td><td>Home and most office Wi-Fi with one shared password</td><td>Network name, password</td></tr>
+            <tr><td>WPA3 Personal only</td><td>Newer routers set to WPA3 only</td><td>Network name, password</td></tr>
+            <tr><td>WPA2 / WPA3 Enterprise</td><td>Company or campus Wi-Fi where you log in with your own username</td><td>Network name, username, password; optionally outer identity, EAP method and inner method</td></tr>
+            <tr><td>Open (no password)</td><td>Networks with no password</td><td>Network name only</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <details class="more">
+        <summary>Enterprise networks: the extra fields explained</summary>
+        <dl class="defs">
+          <dt>Username</dt><dd>Your network login, as your IT team gave it to you.</dd>
+          <dt>Outer identity</dt><dd>Optional. Some networks want an anonymous name on the outside of the login. Leave empty and Bloom uses your username.</dd>
+          <dt>EAP method</dt><dd><em>Auto</em> tries PEAP and TTLS. Pick one only if IT tells you to.</dd>
+          <dt>Inner (TTLS)</dt><dd>Only for TTLS: MSCHAPv2 is the usual one; PAP, CHAP and MSCHAP are there if IT asks.</dd>
+        </dl>
+      </details>
+      <div class="callout">
+        <b>Switching networks later.</b> Bluetooth setup is always on, so you can move the sensor to another network any time: open <span class="ui">Device Wi-Fi</span>, connect, and save new details. <span class="ui">Forget Wi-Fi</span> wipes the saved network from the sensor.
+      </div>
+      <div class="callout warn">
+        <b>“Bluetooth setup needs the secure page”?</b> You opened Bloom over plain http or in a browser without Web Bluetooth. Open <code>https://thermal.gpunet.in</code> in Chrome and try again.
+      </div>
+      <button type="button" class="done-btn" data-done="wifi">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 4 -->
+    <section class="chapter" id="status" data-ch="status">
+      <p class="eyebrow">Chapter 4</p>
+      <h2>Is it live? Reading the status</h2>
+      <p class="lede">Before trusting any number, check the pill in the top bar. Bloom never passes made-up values off as real: when the sensor is missing it says so.</p>
+      <div class="states">
+        <div class="state"><span class="pill-demo"><i class="dot"></i>waiting for device</span><p>Bloom has never heard from a sensor yet. Do chapter 3.</p></div>
+        <div class="state"><span class="pill-demo"><i class="dot"></i>bloom-node offline</span><p>Your sensor was here but has stopped reporting: power, Wi-Fi or distance to the router. A banner also says <em>Device offline: waiting for the thermal node</em>.</p></div>
+        <div class="state"><span class="pill-demo"><i class="dot"></i>Sensor not connected · demo</span><p>Bloom is showing generated demo values so you can explore. Nothing on screen is your room.</p></div>
+        <div class="state good"><span class="pill-demo"><i class="dot on"></i>bloom-node · up 812s</span><p>Live. The name is your sensor, and <em>up</em> is how long it has been running since its last restart.</p></div>
+      </div>
+      <h3 class="sub-h">The strip along the bottom</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Reading</th><th>What it means</th><th>What healthy looks like</th></tr></thead>
+          <tbody>
+            <tr><td>occupancy</td><td>People Bloom counts in the room right now</td><td>Matches what you see</td></tr>
+            <tr><td>room temperature</td><td>The room's air temperature, measured from the thermal view</td><td>Close to a wall thermometer</td></tr>
+            <tr><td>AC (D8 LED)</td><td>Whether the AC output is ON or OFF. On the development board it also lights the LED on pin D8, so you can test without an AC.</td><td>Agrees with the AC itself</td></tr>
+            <tr><td>Wi-Fi signal</td><td>Signal strength at the sensor, in dBm (closer to 0 is stronger)</td><td>Better than −70 dBm; −80 or weaker drops out</td></tr>
+            <tr><td>thermal frames</td><td>How many thermal pictures arrive each second</td><td>About 2 /s. 0 means the stream has stopped</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="done-btn" data-done="status">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 5 -->
+    <section class="chapter" id="mount" data-ch="mount">
+      <p class="eyebrow">Chapter 5</p>
+      <h2>Mount the sensor and set its orientation</h2>
+      <p class="lede">Where the sensor hangs decides what it can count. Then three buttons under <span class="ui">Device orientation</span> tell Bloom how it hangs, so the view on screen matches the room.</p>
+      <div class="split">
+        <div>
+          <h3 class="sub-h first">Where to mount it</h3>
+          <ul class="ticks">
+            <li><b>High up</b>, on the ceiling or high on a wall, looking down across the area people use.</li>
+            <li><b>Away from heat in view</b>: radiators, heaters, coffee machines and sunny windows look like warm bodies.</li>
+            <li><b>Line of sight to the AC</b> so its infrared commands reach the AC's receiver.</li>
+            <li><b>Within good Wi-Fi</b>: check the signal in the bottom strip after mounting.</li>
+          </ul>
+          <h3 class="sub-h">The orientation buttons</h3>
+          <dl class="defs">
+            <dt><span class="ui">Set as facing down</span></dt><dd>Hold or mount the sensor the way it will hang, lens to the floor, then press it. Bloom remembers that pose and shows tilt relative to it.</dd>
+            <dt><span class="ui">zero yaw</span></dt><dd>Makes the sensor's current heading the zero point, so the yaw reading starts at 0°.</dd>
+            <dt><span class="ui">Rotate view</span></dt><dd>Turns the thermal view and the people a quarter turn each press (0°, 90°, 180°, 270°). Press until someone walking toward the door moves toward the door on screen.</dd>
+            <dt>Roll · pitch · yaw</dt><dd>The live tilt of the sensor. The small cube labelled TOP and LENS turns with it.</dd>
+          </dl>
+        </div>
+        <div class="practice">
+          <p class="practice-tag">Practice · Rotate view</p>
+          <p class="practice-hint">The door is at the bottom of this room. A person walks in through it. Rotate until the person enters from the bottom.</p>
+          <div class="rot-stage">
+            <canvas id="rot-canvas" width="320" height="240" aria-label="Practice thermal view with a person walking"></canvas>
+            <span class="rot-door">door</span>
+          </div>
+          <div class="practice-row">
+            <button type="button" class="btn small" id="rot-btn">Rotate view 0°</button>
+            <span class="rot-result" id="rot-result" aria-live="polite">Not matching yet</span>
+          </div>
+        </div>
+      </div>
+      <button type="button" class="done-btn" data-done="mount">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 6 -->
+    <section class="chapter" id="room" data-ch="room">
+      <p class="eyebrow">Chapter 6</p>
+      <h2>Read the room panel</h2>
+      <p class="lede">The left panel is the room in numbers. One setting lives here too: the blob threshold, which decides what counts as a person.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Line</th><th>What it tells you</th></tr></thead>
+          <tbody>
+            <tr><td><b>people</b> and <b>room °C</b></td><td>The headline: how many are in and how warm the room is.</td></tr>
+            <tr><td>People in the zone</td><td>How warm the people read: the average of each person's hottest point. Shows <em>nobody</em> when the room is empty. Skin reads around 32–35 °C.</td></tr>
+            <tr><td>Hottest point</td><td>The single warmest spot anywhere in view. A sudden high value can mean equipment running hot.</td></tr>
+            <tr><td>Sensor board</td><td>The temperature of the sensor's own electronics. It runs warmer than the room; that is normal.</td></tr>
+            <tr><td>Blob threshold</td><td>How much warmer than its surroundings a patch must be to count as a person, in °C. Default 2.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="practice wide">
+        <p class="practice-tag">Practice · Blob threshold</p>
+        <p class="practice-hint">This room has two people, a laptop and a sunny window. Find a threshold that counts exactly the two people.</p>
+        <div class="blob-wrap">
+          <canvas id="blob-canvas" width="384" height="288" aria-label="Practice thermal view with two people, a laptop and a sunny window"></canvas>
+          <div class="blob-side">
+            <label class="field">Blob threshold
+              <span class="num-row"><input type="range" id="blob-thr" min="0.5" max="8" step="0.5" value="1"><output id="blob-thr-out">1.0 °C</output></span>
+            </label>
+            <p class="big-count"><b id="blob-count">4</b> counted as people</p>
+            <p class="blob-verdict" id="blob-verdict" aria-live="polite"></p>
+            <ul class="blob-legend"><li><i class="sw p"></i>person</li><li><i class="sw o"></i>counted by mistake</li></ul>
+          </div>
+        </div>
+      </div>
+      <div class="callout tip"><b>Rule of thumb.</b> If chairs, laptops or a window get counted, raise the threshold by 0.5 °C at a time. If someone sitting still is missed, lower it. Small changes go a long way.</div>
+      <button type="button" class="done-btn" data-done="room">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 7 -->
+    <section class="chapter" id="thermal" data-ch="thermal">
+      <p class="eyebrow">Chapter 7</p>
+      <h2>The thermal view</h2>
+      <p class="lede">Press <span class="ui primary">Show thermal view</span> in the top bar to lay the sensor's own picture over the watched room. Press it again (it then reads <em>Hide thermal view</em>) to go back to the people markers.</p>
+      <div class="split">
+        <div>
+          <ul class="ticks">
+            <li><b>It is coarse on purpose.</b> 32 × 24 temperature readings: enough to find people, too few to ever show a face.</li>
+            <li><b>Colours run cold to hot</b>: dark purple, red, orange, yellow, then white for the warmest.</li>
+            <li><b>People markers hide</b> while the thermal view is on, because the view already shows the people.</li>
+            <li><b>The room tag</b> on the picture (<em>Open office · 1 in · 27.0 °C</em>) is the same headline as the Room panel.</li>
+            <li><b>On a phone</b> Bloom opens on the whole building, then glides into the watched room. Use <span class="ui">Zoom to the room</span> on the picture to go out and in again, or tap the building.</li>
+          </ul>
+        </div>
+        <figure class="palette-card">
+          <div class="palette-bar" aria-hidden="true"></div>
+          <div class="palette-labels"><span>coolest in view</span><span>warmest in view</span></div>
+          <canvas id="mini-thermal" width="320" height="240" aria-label="Example thermal view with one person"></canvas>
+          <figcaption>Example: one person near a desk, as the sensor sees them.</figcaption>
+        </figure>
+      </div>
+      <button type="button" class="done-btn" data-done="thermal">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 8 -->
+    <section class="chapter" id="ac" data-ch="ac">
+      <p class="eyebrow">Chapter 8</p>
+      <h2>Automate the AC</h2>
+      <p class="lede">The right panel decides when the AC runs. With <span class="ui">Automatic</span> on, Bloom turns the AC on when <b>any</b> rule you have switched on is true, and off once <b>none</b> is true for the delay you set.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Rule</th><th>True when</th><th>Good for</th></tr></thead>
+          <tbody>
+            <tr><td>On when someone is in</td><td>At least one person is counted</td><td>Meeting rooms, cabins</td></tr>
+            <tr><td>On when people read ≥ <em>X</em> °C</td><td>The people's average hottest point is at or above X</td><td>Cooling only when people actually feel warm</td></tr>
+            <tr><td>On when room ≥ <em>Y</em> °C</td><td>The room is at or above Y, people or not</td><td>Server rooms, keeping a space below a limit</td></tr>
+            <tr><td>Off after empty for <em>N</em> s</td><td>(not a rule) how long Bloom waits, once no rule holds, before switching off</td><td>Avoiding off/on flicker when someone steps out</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="practice wide">
+        <p class="practice-tag">Practice · AC rules simulator</p>
+        <p class="practice-hint">Left: the same switches as Bloom. Right: change the room and watch the decision. Time runs 10× fast.</p>
+        <div class="ac-sim">
+          <div class="ac-panel">
+            <div class="ac-head">
+              <span class="orb" id="sim-orb">OFF</span>
+              <div><b id="sim-word">Off</b><p id="sim-why">no rule holds</p></div>
+            </div>
+            <div class="ac-manual">
+              <button type="button" class="btn small" id="sim-on">Turn on</button>
+              <button type="button" class="btn small" id="sim-off">Turn off</button>
+              <button type="button" class="btn small" id="sim-resume" hidden>Resume auto</button>
+            </div>
+            <label class="sw-row"><span>Automatic</span><input type="checkbox" id="sim-auto" checked><i></i></label>
+            <label class="sw-row"><span>On when someone is in</span><input type="checkbox" id="sim-r-occ" checked><i></i></label>
+            <div class="sw-row"><span>On when people read ≥</span><span class="num-in"><input type="number" id="sim-person-hot" value="33" step="0.5"> °C</span><label class="inline-sw"><input type="checkbox" id="sim-r-person" aria-label="Enable people rule"><i></i></label></div>
+            <div class="sw-row"><span>On when room ≥</span><span class="num-in"><input type="number" id="sim-temp-on" value="26" step="0.5"> °C</span><label class="inline-sw"><input type="checkbox" id="sim-r-room" checked aria-label="Enable room rule"><i></i></label></div>
+            <div class="sw-row"><span>Off after empty for</span><span class="num-in"><input type="number" id="sim-delay" value="60" step="10" min="0"> s</span></div>
+          </div>
+          <div class="ac-world">
+            <label class="field">People in the room <output id="w-people-out">0</output><input type="range" id="w-people" min="0" max="6" value="0"></label>
+            <label class="field">Room temperature <output id="w-room-out">25.0 °C</output><input type="range" id="w-room" min="20" max="32" step="0.5" value="25"></label>
+            <label class="field">People read <output id="w-ptemp-out">33.5 °C</output><input type="range" id="w-ptemp" min="30" max="37" step="0.5" value="33.5"></label>
+            <p class="sim-clock">Room time <b id="sim-clock">10:00:00</b></p>
+            <ol class="sim-log" id="sim-log" aria-live="polite"></ol>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sub-h">Taking over by hand</h3>
+      <p><span class="ui">Turn on</span> and <span class="ui">Turn off</span> override the rules for a while; the status line adds <em>manual for … s</em>. When you want the rules back sooner, press <span class="ui">Resume auto</span>, which only appears during an override. Try it in the simulator above.</p>
+      <div class="callout tip"><b>A good starting setup:</b> Automatic on, <em>On when someone is in</em> on, <em>On when room ≥ 26 °C</em> on, and <em>Off after empty for</em> 120 s. Then tune with a week of Analytics.</div>
+      <button type="button" class="done-btn" data-done="ac">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 9 -->
+    <section class="chapter" id="remote" data-ch="remote">
+      <p class="eyebrow">Chapter 9</p>
+      <h2>Teach Bloom your AC's remote</h2>
+      <p class="lede">The sensor has an infrared receiver that listens to your remote, and a blaster that can press its buttons for you. Teach it each button once.</p>
+      <div class="split">
+        <ol class="steps">
+          <li><b>Hold</b> a button in Bloom's <span class="ui">Remote</span> panel for about half a second. Its label changes to <em>press remote…</em></li>
+          <li><b>Point your real remote</b> at the sensor and press the same button.</li>
+          <li><b>The card flashes</b> and now reads <em>mapped</em>. Bloom has learned that code.</li>
+          <li><b>Tap</b> a mapped card to send the code to the AC, just like pressing the remote.</li>
+        </ol>
+        <div class="practice">
+          <p class="practice-tag">Practice · Remote</p>
+          <p class="practice-hint">Hold <b>Fan</b> to learn it, then press the practice remote below. Tap to send.</p>
+          <div class="remote-grid" id="remote-grid"></div>
+          <div class="fake-remote" id="fake-remote" hidden>
+            <p>Your AC remote</p>
+            <button type="button" class="btn small" id="fake-press">Press <span id="fake-name">Fan</span></button>
+          </div>
+          <ol class="sim-log small" id="remote-log" aria-live="polite"></ol>
+        </div>
+      </div>
+      <h3 class="sub-h">Bloom listens, too</h3>
+      <p>The small line under each card says what Bloom does when it <em>hears</em> that button from your real remote: <b>Power</b> toggles Bloom's idea of the AC so it stays in step with you, <b>Temp + / Temp −</b> move the setpoint by 1, and <b>Mode</b> switches the thermal view on or off. Presses show up in the log, for example <code>AC OFF: remote: power</code>.</p>
+      <button type="button" class="done-btn" data-done="remote">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 10 -->
+    <section class="chapter" id="log" data-ch="log">
+      <p class="eyebrow">Chapter 10</p>
+      <h2>Read the event log</h2>
+      <p class="lede">Under the remote is Bloom's diary, newest first. Every AC change says <em>why</em>, so you never have to guess.</p>
+      <div class="table-wrap">
+        <table class="log-table">
+          <thead><tr><th>Line in the log</th><th>What happened</th></tr></thead>
+          <tbody>
+            <tr><td><code>AC ON: 1 in the room</code></td><td>The <em>someone is in</em> rule switched the AC on.</td></tr>
+            <tr><td><code>AC ON: room 25.7 °C ≥ 24.0</code></td><td>The room rule fired: 25.7 °C passed your 24 °C line.</td></tr>
+            <tr><td><code>AC OFF: no rule holds (room 28.1 °C, people 34.6 °C) for 37 s</code></td><td>Nothing switched on was true for longer than your off delay, so Bloom switched off. The values are what it saw.</td></tr>
+            <tr><td><code>AC ON: manual (page)</code> / <code>AC OFF: manual (page)</code></td><td>Someone pressed Turn on or Turn off on the page.</td></tr>
+            <tr><td><code>AC OFF: remote: power</code></td><td>Someone pressed Power on the real remote; Bloom heard it.</td></tr>
+            <tr><td><code>sensor connected: live values</code></td><td>The sensor came back; numbers are real again.</td></tr>
+            <tr><td><code>sensor not connected: showing demo values</code></td><td>The sensor dropped out; Bloom switched to demo values.</td></tr>
+            <tr><td><code>device offline</code></td><td>No messages from the sensor. Check power and Wi-Fi.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <button type="button" class="done-btn" data-done="log">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 11 -->
+    <section class="chapter" id="analytics" data-ch="analytics">
+      <p class="eyebrow">Chapter 11</p>
+      <h2>Analytics: look back in time</h2>
+      <p class="lede">Press <span class="ui">Analytics</span> in the top bar. Pick a range at the top (15 min, 1 h, 6 h, 24 h or 7 days) and read the room's history. <span class="ui">Live view</span> takes you back.</p>
+      <div class="split">
+        <ul class="ticks">
+          <li><b>Four tiles</b> at the top: <em>Room now</em>, <em>People now</em>, <em>In the room</em> and <em>AC on</em>, each for the chosen range.</li>
+          <li><b>Room and people temperature</b>: the room (blue) and the people (orange). The dashed lines are your AC thresholds, so you can see when a rule would fire.</li>
+          <li><b>People in the room, and when the AC ran</b>: the grey area is occupancy, the blue bars are when the AC was on. Gaps between people and blue bars are wasted cooling.</li>
+          <li><b>Smoothed, not hidden.</b> Lines are moving averages so a week reads as a trend; the raw readings stay faint behind them. A gap in the data breaks the line.</li>
+          <li><b>Hover</b> (or touch) a chart for exact values at that moment, on both charts at once. Open <em>Table</em> for the numbers.</li>
+        </ul>
+        <figure class="chart-card">
+          <figcaption><b>Example data</b> · a working day, 1 h range</figcaption>
+          <svg id="ex-chart" viewBox="0 0 520 300" role="img" aria-label="Example analytics chart: room and people temperature with an AC threshold line, and occupancy with AC-on bars"></svg>
+          <ul class="chart-legend"><li><i style="background:#3b7ddd"></i>Room</li><li><i style="background:#FE7743"></i>People</li><li><i class="dash"></i>AC line for the room</li><li><i style="background:#c9ced6"></i>People in the room</li><li><i style="background:#3b7ddd;opacity:.5"></i>AC on</li></ul>
+        </figure>
+      </div>
+      <button type="button" class="done-btn" data-done="analytics">Mark as done</button>
+    </section>
+
+    <!-- ===================================================== 12 -->
+    <section class="chapter" id="trouble" data-ch="trouble">
+      <p class="eyebrow">Chapter 12</p>
+      <h2>Troubleshooting</h2>
+      <p class="lede">Find your symptom. Each answer is in the order to try things.</p>
+      <div class="faq">
+        <details><summary>It says “Sensor not connected · demo”</summary><ol><li>Check the sensor has power.</li><li>Open <span class="ui">Device Wi-Fi</span> and reconnect it to your network (chapter 3).</li><li>Watch the log for <code>sensor connected: live values</code>.</li></ol></details>
+        <details><summary>Device Wi-Fi does nothing, or says it needs the secure page</summary><ol><li>Use Chrome on Android, Windows, macOS or Linux. Safari, Firefox and iPhones cannot do Web Bluetooth.</li><li>Open exactly <code>https://thermal.gpunet.in</code> (https, not http).</li><li>Make sure Bluetooth is on and you are within a few metres of the sensor.</li></ol></details>
+        <details><summary>Saved the Wi-Fi but the sensor never comes online</summary><ol><li>Re-check the password and the security type; Enterprise networks need the username.</li><li>Use <span class="ui">Scan for networks</span>: if your network is not listed, the sensor cannot hear it from where it is.</li><li>Many sensors only join 2.4 GHz Wi-Fi; check your router offers it.</li></ol></details>
+        <details><summary>It counts people who are not there</summary><ol><li>Turn on the thermal view and look for warm things that are not people: laptops, heaters, sunny glass.</li><li>Raise <span class="ui">Blob threshold</span> by 0.5 °C at a time (chapter 6).</li><li>Re-aim the sensor so the heat source is out of view.</li></ol></details>
+        <details><summary>It misses people who are sitting still</summary><ol><li>Lower the blob threshold by 0.5 °C.</li><li>Check the sensor looks down on the seats rather than across them.</li></ol></details>
+        <details><summary>People move the wrong way on screen</summary><ol><li>Press <span class="ui">Rotate view</span> until movement matches the room (chapter 5).</li><li>Mount the sensor, then press <span class="ui">Set as facing down</span> and <span class="ui">zero yaw</span>.</li></ol></details>
+        <details><summary>The AC does not react to Bloom</summary><ol><li>Check the card in <span class="ui">Remote</span> says <em>mapped</em>; if not, teach it again (chapter 9).</li><li>Make sure nothing blocks the line between sensor and AC.</li><li>Look at the log: if Bloom says <code>AC ON</code> but the AC stays off, it is the infrared path, not the rules.</li></ol></details>
+        <details><summary>The AC switches off and on too often</summary><ol><li>Raise <em>Off after empty for</em> to 120 s or more.</li><li>Use the people-temperature rule instead of the room rule if the room sits right at your threshold.</li></ol></details>
+        <details><summary>Analytics says “No readings in this range yet”</summary><ol><li>The sensor has not reported during that range. Pick a longer range, or check the sensor is live.</li></ol></details>
+      </div>
+
+      <h3 class="sub-h">Glossary</h3>
+      <dl class="defs glossary">
+        <dt>Thermal node</dt><dd>The sensor board: thermal camera, IR receiver and blaster, orientation sensor, Wi-Fi and Bluetooth.</dd>
+        <dt>Thermal frame</dt><dd>One 32 × 24 grid of temperatures. Bloom gets about two a second.</dd>
+        <dt>Blob</dt><dd>A patch warmer than its surroundings. Blobs over the threshold are counted as people.</dd>
+        <dt>Demo mode</dt><dd>Generated values Bloom shows when no sensor is connected, always labelled as demo.</dd>
+        <dt>Setpoint</dt><dd>The temperature line a rule compares against, such as 24 °C in <em>On when room ≥ 24</em>.</dd>
+        <dt>Override</dt><dd>A manual Turn on / Turn off that pauses the rules for a while.</dd>
+        <dt>RSSI / dBm</dt><dd>Wi-Fi signal strength. −50 is excellent, −70 is fine, −80 is weak.</dd>
+      </dl>
+      <button type="button" class="done-btn" data-done="trouble">Mark as done</button>
+    </section>
+
+    <section class="finish" id="finish">
+      <h2>That's all of Bloom.</h2>
+      <p>Your room now counts its people and runs its own AC. Check Analytics after a week and tune the rules.</p>
+      <a class="btn primary" href="https://thermal.gpunet.in" target="_blank" rel="noopener">Open Bloom</a>
+    </section>
+
+    <footer class="foot">
+      <span>© 2026 SURDS Technologies Private Limited</span>
+      <a href="/">SURDS home</a>
+    </footer>
+  </main>
+</div>
+</body>
+</html>
