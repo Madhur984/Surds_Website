@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/views/render/index.html"
+      "destination": "/views/render_madhur/index.html"
     },
     {
       "source": "/home",
@@ -38,7 +38,15 @@
     },
     {
       "source": "/render",
-      "destination": "/views/render/index.html"
+      "destination": "/views/render_madhur/index.html"
+    },
+    {
+      "source": "/render_madhur",
+      "destination": "/views/render_madhur/index.html"
+    },
+    {
+      "source": "/render_aryan",
+      "destination": "/views/render_aryan/index.html"
     },
     {
       "source": "/explore",

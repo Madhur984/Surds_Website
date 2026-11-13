@@ -44,3 +44,10 @@ isometric_office.glb
 
 # Python bytecode
 __pycache__/
+
+# rtx-render output
+out/
+
+# personal Claude Code state
+.claude/settings.local.json
+.claude/scheduled_tasks.lock

@@ -1,0 +1,458 @@
+#!/usr/bin/env python3
+"""Render a Blender scene on the team's RTX 4090 (rtxserver) as if it rendered locally, through the studio
+at wa.gpunet.in: no ssh.
+
+  rtx-render scene.blend [-o OUT] [-s START] [-e END] [-w WORKERS] [--mp4] [--video-only] [--detach]
+  rtx-render build.py [--base base.blend] [...same options]
+  rtx-render monitor [JOB]        live progress, keeps downloading frames into the job's out folder
+  rtx-render status               your jobs: frames done / total
+  rtx-render cancel [JOB]         stop a job's workers on the server
+  rtx-render clean [JOB]          delete a finished job's files on the server (local frames are kept)
+  rtx-render login                save your render token (make one on the studio's Blender render page)
+
+A .blend is packed (textures, fonts, libraries) into one uncompressed file here, before upload, because those
+files live on this machine. Uploads are diffs: the file is cut into chunks along its own block structure and
+only the chunks the server has nowhere are sent (gzip-compressed), so a re-upload after a small edit is a few
+MB. The server keeps the last upload of each file keyed by its path inside the git repo, so collaborators diff
+against each other's uploads. A .py is a script that builds a scene: it runs here, in a local headless Blender
+(so its local paths all work), and the scene it leaves behind is packed and rendered remotely; no Python is
+ever sent to the server. --video-only encodes the mp4 on the server and downloads only that. Frames are
+copied into OUT (default ./out/<name>/) while the job runs. Ctrl-C in the monitor only detaches.
+
+Settings: RTX_URL (default https://wa.gpunet.in), RTX_TOKEN (else ~/.config/rtx-render/token), BLENDER.
+"""
+import argparse
+import concurrent.futures
+import getpass
+import gzip
+import hashlib
+import json
+import os
+import re
+import shlex
+import struct
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.error
+import urllib.request
+
+URL = os.environ.get("RTX_URL", "https://wa.gpunet.in").rstrip("/") + "/render"
+TOKEN_FILE = os.path.expanduser("~/.config/rtx-render/token")
+LOCAL_BLENDER = os.environ.get("BLENDER", "blender")
+STATE = os.path.expanduser("~/.cache/rtx-render/jobs.json")
+
+PACK_PY = r"""
+import bpy, json, sys
+s = bpy.context.scene
+out = sys.argv[sys.argv.index("--") + 1]
+bpy.ops.file.pack_all()
+s.render.filepath = "//frames/f_"
+s.render.use_file_extension = True
+fmt = s.render.image_settings.file_format
+if fmt in ("FFMPEG", "AVI_JPEG", "AVI_RAW"):          # movie outputs become a PNG sequence
+    s.render.image_settings.file_format = "PNG"
+bpy.ops.wm.save_as_mainfile(filepath=out, compress=False, copy=True)   # uncompressed: the upload can diff it
+print("RTX_SCENE " + json.dumps(dict(start=s.frame_start, end=s.frame_end, step=s.frame_step, fps=s.render.fps,
+      ext=s.render.file_extension, res=[s.render.resolution_x, s.render.resolution_y, s.render.resolution_percentage],
+      engine=s.render.engine)))
+"""
+
+
+# ------------------------------------------------------------------ plumbing
+def token():
+    t = os.environ.get("RTX_TOKEN")
+    if not t and os.path.exists(TOKEN_FILE):
+        t = open(TOKEN_FILE).read().strip()
+    if not t:
+        sys.exit("no render token: make one on the Blender render page at wa.gpunet.in (Apps), then rtx-render login")
+    return t
+
+
+def api(method, path, body=None, raw=None, gz=False, stream=False, timeout=120):
+    """One API call; JSON back (or the response, with stream=True)."""
+    headers = {"Authorization": "Bearer " + token(), "User-Agent": "rtx-render/2"}
+    data = None
+    if raw is not None:
+        data = raw
+        headers["Content-Type"] = "application/octet-stream"
+        if gz:
+            headers["Content-Encoding"] = "gzip"
+    elif body is not None:
+        data = json.dumps(body).encode()
+        headers["Content-Type"] = "application/json"
+    req = urllib.request.Request(URL + path, data=data, method=method, headers=headers)
+    for attempt in range(4):
+        try:
+            r = urllib.request.urlopen(req, timeout=timeout)
+            return r if stream else json.loads(r.read() or b"{}")
+        except urllib.error.HTTPError as e:
+            try:
+                msg = json.loads(e.read()).get("error") or e.reason
+            except ValueError:
+                msg = e.reason
+            if e.code in (502, 503, 504) and attempt < 3:
+                time.sleep(2 ** attempt)
+                continue
+            raise SystemExit(f"{method} {path}: {e.code} {msg}")
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            if attempt < 3:
+                time.sleep(2 ** attempt)
+                continue
+            raise SystemExit(f"can't reach {URL}: {e}")
+
+
+def safe_name(s):
+    s = re.sub(r"[^A-Za-z0-9._-]+", "-", s).lstrip("._-")[:60]
+    return s or "scene"
+
+
+def cache_key(path):
+    """Uploads of the same file share a server-side cache, so the next one is sent as a diff. Inside a git
+    repo the key is the repo-relative path, so collaborators diff against each other's uploads too."""
+    name = safe_name(os.path.splitext(os.path.basename(path))[0])
+    r = subprocess.run(["git", "-C", os.path.dirname(path), "rev-parse", "--show-toplevel"],
+                       capture_output=True, text=True)
+    ident = os.path.relpath(path, r.stdout.strip()) if r.returncode == 0 else path
+    return f"{name}-{hashlib.sha1(ident.encode()).hexdigest()[:8]}"
+
+
+def blend_chunks(d):
+    """rtx-blend1 (the studio page cuts the same way): every block of 32 KB or more is a chunk of its own, in
+    pieces of up to 4 MB; the small blocks between are grouped ~64 KB at a time. Blender rewrites its pointers on
+    each save, which touches nearly every small block, but the big ones (packed images, mesh data) come out the
+    same, and block boundaries survive inserted objects. Anything else (a compressed .blend) is cut every 1 MB."""
+    n, piece, cuts = len(d), 4 << 20, {0}
+    hl = bh = 0
+    wide = False
+    if d[:9] == b"BLENDER-v":
+        hl, bh = 12, 24
+    elif d[:13] == b"BLENDER17-01v":
+        hl, bh, wide = 17, 32, True
+    p = 0
+    if hl:
+        p, run = hl, 0
+        while p + bh <= n:
+            code = d[p:p + 4]
+            ln = struct.unpack_from("<Q", d, p + 16)[0] if wide else struct.unpack_from("<i", d, p + 4)[0]
+            if ln < 0 or p + bh + ln > n:
+                break
+            s, e = p + bh, p + bh + ln
+            if ln >= 32768:
+                cuts.add(s)
+                cuts.update(range(s + piece, e, piece))
+                cuts.add(e)
+                run = 0
+            else:
+                run += bh + ln
+                if run >= 65536:
+                    cuts.add(e)
+                    run = 0
+            p = e
+            if code == b"ENDB":
+                break
+    cuts.update(range(p, n, piece if hl else 1 << 20))
+    cuts.add(n)
+    c = sorted(cuts)
+    return [(a, b) for a, b in zip(c, c[1:]) if b > a]
+
+
+def load_state():
+    try:
+        with open(STATE) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def save_state(st):
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    with open(STATE, "w") as f:
+        json.dump(st, f, indent=1)
+
+
+def pick_job(st, name):
+    if not st:
+        sys.exit("no jobs yet")
+    if name is None:
+        return max(st.values(), key=lambda j: j["created"])
+    if name not in st:
+        sys.exit(f"unknown job {name}; known: {', '.join(st)}")
+    return st[name]
+
+
+def fmt_time(s):
+    s = int(max(s or 0, 0))
+    return f"{s // 3600}h{s // 60 % 60:02d}m" if s >= 3600 else f"{s // 60}m{s % 60:02d}s"
+
+
+# ------------------------------------------------------------------ submit
+def prepare(path, base, workdir):
+    """Pack the scene into workdir/<name>.blend; returns (packed path, scene info)."""
+    name = os.path.splitext(os.path.basename(path))[0]
+    packed = os.path.join(workdir, name + ".blend")
+    pack = os.path.join(workdir, "pack.py")
+    with open(pack, "w") as f:
+        f.write(PACK_PY)
+    cmd = [LOCAL_BLENDER, "-b"]
+    if path.endswith(".blend"):
+        cmd += [path]
+    else:
+        if base:
+            cmd += [base]
+        cmd += ["-P", os.path.abspath(path)]
+    cmd = cmd[:2] + ["--python-exit-code", "1"] + cmd[2:] + ["-P", pack, "--", packed]
+    print(f"packing locally: {' '.join(shlex.quote(c) for c in cmd[:4])} ...")
+    r = subprocess.run(cmd, capture_output=True, text=True, cwd=os.path.dirname(os.path.abspath(path)))
+    info = next((json.loads(l[10:]) for l in r.stdout.splitlines() if l.startswith("RTX_SCENE ")), None)
+    if r.returncode != 0 or info is None or not os.path.exists(packed):
+        sys.stderr.write(r.stdout[-3000:] + r.stderr[-2000:])
+        sys.exit("packing failed")
+    return packed, info
+
+
+def upload(packed, key, name):
+    """Send the packed file as a diff; returns the server's scene record."""
+    with open(packed, "rb") as f:
+        data = f.read()
+    parts = blend_chunks(data)
+    chunks = [{"hash": hashlib.sha256(data[a:b]).hexdigest(), "size": b - a} for a, b in parts]
+    st = api("POST", "/uploads", {"key": key, "name": name, "size": len(data),
+                                  "sha256": hashlib.sha256(data).hexdigest(), "chunks": chunks})
+    want = set(st["missing"])
+    todo = []
+    for (a, b), c in zip(parts, chunks):
+        if c["hash"] in want:
+            want.discard(c["hash"])
+            todo.append((a, b, c["hash"]))
+    total = sum(b - a for a, b, _ in todo)
+    sent = [0, 0]
+
+    def one(t):
+        a, b, h = t
+        z = gzip.compress(data[a:b], 6)
+        api("PUT", f"/uploads/{st['upload']}/chunks/{h}", raw=z, gz=True)
+        sent[0] += b - a
+        sent[1] += len(z)
+        sys.stdout.write(f"\x1b[2K\r  sending {sent[1] / 1e6:.1f} MB ... {100 * sent[0] // max(total, 1)}%")
+        sys.stdout.flush()
+
+    with concurrent.futures.ThreadPoolExecutor(4) as ex:
+        list(ex.map(one, todo))
+    if todo:
+        sys.stdout.write("\n")
+    sc = api("POST", f"/uploads/{st['upload']}/finish", timeout=180)
+    have = st.get("have_bytes", 0)
+    print(f"  sent {sent[1] / 1e6:.1f} MB for {len(data) / 1e6:.0f} MB" +
+          (f" ({have / 1e6:.0f} MB already on the server)" if have else " (first upload)"))
+    if sc.get("missing"):
+        print("  warning: not packed, will render without: " + ", ".join(sc["missing"]))
+    return sc
+
+
+def submit(a):
+    path = os.path.abspath(a.scene)
+    if not os.path.exists(path) or not path.endswith((".blend", ".py")):
+        sys.exit("give a .blend or a .py scene script")
+    token()
+    name = os.path.splitext(os.path.basename(path))[0]
+    out = os.path.abspath(a.out or os.path.join("out", name))
+    work = tempfile.mkdtemp(prefix="rtx-render-")
+    packed, info = prepare(path, a.base, work)
+    start = a.start if a.start is not None else info["start"]
+    end = a.end if a.end is not None else info["end"]
+    size = os.path.getsize(packed) / 1e6
+    total = len(range(start, end + 1, info["step"] or 1))
+    print(f"scene: {info['engine']}, {info['res'][0]}x{info['res'][1]} @ {info['res'][2]}%, "
+          f"frames {start}-{end} ({total}), packed {size:.0f} MB")
+    print(f"uploading to {URL} (diff against the last upload) ...")
+    sc = upload(packed, cache_key(path), safe_name(name))
+    os.unlink(packed)
+    j = api("POST", "/jobs", {"scene": sc["scene"], "start": start, "end": end, "workers": max(1, a.workers),
+                              "output": "video" if a.video_only else "frames"})
+    st = load_state()
+    st[j["id"]] = dict(job=j["id"], out=out, total=j["total"], ext=j["ext"], fps=j["fps"], workers=j["workers"],
+                       created=time.time(), source=path, video_only=a.video_only)
+    save_state(st)
+    os.makedirs(out, exist_ok=True)
+    print(f"job {j['id']} queued with {j['workers']} worker(s) -> " +
+          (f"video lands in {out}.mp4" if a.video_only else f"frames land in {out}") +
+          f"\n  watch it at {URL.rsplit('/render', 1)[0]}/#apps/render")
+    if a.detach:
+        print(f"monitor with: rtx-render monitor {j['id']}")
+        return
+    monitor_job(st[j["id"]], mp4=a.mp4)
+
+
+# ------------------------------------------------------------------ monitor
+def sync(j):
+    """Download finished frames the out folder doesn't have yet (the server lists only complete ones)."""
+    fr = api("GET", f"/jobs/{j['job']}/frames")["frames"]
+    have = set(os.listdir(j["out"])) if os.path.isdir(j["out"]) else set()
+    os.makedirs(j["out"], exist_ok=True)
+    n = 0
+    for f in fr:
+        if f["name"] in have:
+            continue
+        r = api("GET", f"/jobs/{j['job']}/frames/{f['n']}", stream=True)
+        tmp = os.path.join(j["out"], "." + f["name"] + ".part")
+        with open(tmp, "wb") as w:
+            while b := r.read(1 << 20):
+                w.write(b)
+        os.replace(tmp, os.path.join(j["out"], f["name"]))
+        n += 1
+    return n
+
+
+def download(path, dest):
+    r = api("GET", path, stream=True, timeout=600)
+    tmp = dest + ".part"
+    with open(tmp, "wb") as w:
+        while b := r.read(1 << 20):
+            w.write(b)
+    os.replace(tmp, dest)
+
+
+def encode(j):
+    frames = sorted(f for f in os.listdir(j["out"]) if f.endswith(j["ext"]))
+    if not frames:
+        return
+    stem = frames[0][:-len(j["ext"])]
+    prefix = stem.rstrip("0123456789")
+    digits = len(stem) - len(prefix)
+    start = int(stem[len(prefix):])
+    mp4 = j["out"].rstrip("/") + ".mp4"
+    src = ["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(j["fps"]), "-start_number", str(start),
+           "-i", os.path.join(j["out"], f"{prefix}%0{digits}d{j['ext']}")]
+    env = {k: v for k, v in os.environ.items() if k != "CUDA_VISIBLE_DEVICES"}   # an empty one hides NVENC
+    for codec in (["-c:v", "libx264", "-crf", "18"], ["-c:v", "h264_nvenc", "-preset", "p7", "-cq", "19"]):
+        if subprocess.run(src + codec + ["-pix_fmt", "yuv420p", "-movflags", "+faststart", mp4], env=env,
+                          capture_output=True).returncode == 0:
+            print(f"encoded {mp4}")
+            return
+    print("mp4 encoding failed (no libx264 or h264_nvenc); the frames are all there")
+
+
+def monitor_job(j, mp4=False):
+    print(f"monitoring {j['job']} (Ctrl-C detaches; the render keeps going)")
+    shown_err = set()
+    try:
+        while True:
+            p = api("GET", f"/jobs/{j['job']}")
+            video = j.get("video_only")
+            if not video and p["done"]:
+                sync(j)
+            n, total = p["done"], p["total"] or 1
+            bar = "#" * int(30 * n / total) + "." * (30 - int(30 * n / total))
+            g = p.get("gpu") or {}
+            gpu_s = f"GPU {g['util']}% {g['used_mb'] / 1024:.1f} GB" if g.get("total_mb") else "GPU ?"
+            local = "-" if video else len([f for f in os.listdir(j["out"]) if f.endswith(j["ext"])])
+            what = p.get("waiting") or f"{p['frames_per_min']:.1f} f/min  elapsed {fmt_time(p['elapsed_s'])}  ETA {fmt_time(p['eta_s'])}"
+            sys.stdout.write("\x1b[2K\r" + f"[{bar}] {n}/{p['total']}  local {local}  {what}  {gpu_s}")
+            sys.stdout.flush()
+            for l in p.get("logs") or []:
+                if "rror" in l and l not in shown_err:
+                    shown_err.add(l)
+                    print("\n  " + l)
+            if p.get("stalled"):
+                print("\n  no new frame for 15 min (outlines over dense geometry can do this); see the studio page")
+            if p["state"] in ("done", "cancelled", "failed"):
+                took = fmt_time(p["elapsed_s"])
+                if video:
+                    mp4_path = j["out"].rstrip("/") + ".mp4"
+                    if p.get("video"):
+                        download(f"/jobs/{j['job']}/video.mp4", mp4_path)
+                    print(f"\n{p['state']}: {n}/{p['total']} frames in {took}; " +
+                          (f"video in {mp4_path}" if os.path.exists(mp4_path) else "no video (see the studio page for the log)"))
+                    return
+                sync(j)
+                local = len([f for f in os.listdir(j["out"]) if f.endswith(j["ext"])])
+                print(f"\n{p['state']}: {n}/{p['total']} frames in {took}, {local} in {j['out']}")
+                if p["state"] == "done" and n < p["total"]:
+                    print("  some frames are missing; the worker logs are on the studio page")
+                if mp4:
+                    encode(j)
+                return
+            time.sleep(8)
+    except KeyboardInterrupt:
+        print(f"\ndetached; rtx-render monitor {j['job']} to reattach")
+
+
+# ------------------------------------------------------------------ other commands
+def status(_):
+    st = load_state()
+    jobs = api("GET", "/jobs")["jobs"]
+    mine = [p for p in jobs if p.get("mine")]
+    if not mine:
+        print("no jobs")
+    for p in reversed(mine):
+        out = st.get(p["id"], {}).get("out", "")
+        print(f"{p['id']:40s} {p['state']:9s} {p['done']:>5}/{p['total']:<5} {('-> ' + out) if out else ''}")
+
+
+def cancel(a):
+    j = pick_job(load_state(), a.job)
+    api("POST", f"/jobs/{j['job']}/cancel")
+    print(f"cancelled {j['job']}; frames so far go to {j['out']}")
+    if not j.get("video_only"):
+        sync(j)
+
+
+def clean(a):
+    st = load_state()
+    j = pick_job(st, a.job)
+    if api("GET", f"/jobs/{j['job']}")["state"] not in ("done", "cancelled", "failed"):
+        sys.exit("job still running; cancel it first")
+    api("DELETE", f"/jobs/{j['job']}")
+    del st[j["job"]]
+    save_state(st)
+    print(f"removed {j['job']} from the server (local frames in {j['out']} kept)")
+
+
+def login(_):
+    t = getpass.getpass("render token (from the Blender render page at wa.gpunet.in, Apps): ").strip()
+    if not t.startswith("rtx_"):
+        sys.exit("that isn't a render token (they start with rtx_)")
+    os.environ["RTX_TOKEN"] = t
+    who = api("GET", "/info")
+    os.makedirs(os.path.dirname(TOKEN_FILE), exist_ok=True)
+    fd = os.open(TOKEN_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(t + "\n")
+    print(f"signed in as {who['user']}; saved in {TOKEN_FILE}")
+
+
+def main():
+    cmds = {"monitor", "status", "cancel", "clean", "login"}
+    if len(sys.argv) > 1 and sys.argv[1] in cmds:
+        ap = argparse.ArgumentParser(prog="rtx-render " + sys.argv[1])
+        if sys.argv[1] not in ("status", "login"):
+            ap.add_argument("job", nargs="?")
+        if sys.argv[1] == "monitor":
+            ap.add_argument("--mp4", action="store_true", help="encode out/<name>.mp4 when done")
+        a = ap.parse_args(sys.argv[2:])
+        if sys.argv[1] == "monitor":
+            monitor_job(pick_job(load_state(), a.job), mp4=a.mp4)
+        else:
+            {"status": status, "cancel": cancel, "clean": clean, "login": login}[sys.argv[1]](a)
+        return
+    ap = argparse.ArgumentParser(prog="rtx-render", description=__doc__.split("\n\n")[0],
+                                 formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__.split("\n\n", 1)[1])
+    ap.add_argument("scene", help=".blend file, or a .py that builds the scene")
+    ap.add_argument("-o", "--out", help="local folder for the frames (default ./out/<name>)")
+    ap.add_argument("-s", "--start", type=int)
+    ap.add_argument("-e", "--end", type=int)
+    ap.add_argument("-w", "--workers", type=int, default=1,
+                    help="parallel Blender processes on the server (default 1: the GPU is shared; 2 helps when "
+                         "CPU-side work like Freestyle dominates)")
+    ap.add_argument("--base", help="for a .py: .blend to open before running it")
+    ap.add_argument("--mp4", action="store_true", help="encode out/<name>.mp4 locally when done")
+    ap.add_argument("--detach", action="store_true", help="start it and return; use monitor later")
+    ap.add_argument("--video-only", action="store_true",
+                    help="encode the mp4 on the server and download only that (for slow links / off campus)")
+    submit(ap.parse_args())
+
+
+if __name__ == "__main__":
+    main()
