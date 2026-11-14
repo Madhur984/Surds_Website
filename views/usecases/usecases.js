@@ -23,10 +23,27 @@ var clamp = function (x, a, b) { return Math.max(a, Math.min(b, x)); };
 var fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
 
 /* ---------- renderer, scene, lights ---------- */
+var UI = window.UCUI || { progress: function () { }, ready: function () { }, fail: function () { }, sample: function () { } };
+var PHONE = matchMedia('(max-width: 760px), (pointer: coarse)').matches;
 var canvas = document.getElementById('stage');
-var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.75));
-renderer.setSize(innerWidth, innerHeight);
+var renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+} catch (e) {
+  UI.fail('This browser cannot show the 3D mall. Everything else still works.');
+  throw e;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, PHONE ? 1.5 : 1.75));
+// size to the canvas's CSS box (100lvh), so a phone's collapsing toolbar does not resize the GL buffer
+var VW = 0, VH = 0;
+function sizeStage() {
+  var w = canvas.clientWidth || innerWidth, h = canvas.clientHeight || innerHeight;
+  if (w === VW && Math.abs(h - VH) < 2) return false;
+  VW = w; VH = h;
+  renderer.setSize(VW, VH, false);
+  return true;
+}
+sizeStage();
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.95;
@@ -35,19 +52,19 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.setClearColor(0x000000, 0);
 
 var scene = new THREE.Scene();
-var DAY_FOG = new THREE.Color('#e3e6e6'), NIGHT_FOG = new THREE.Color('#142029');
-scene.fog = new THREE.Fog(DAY_FOG.clone(), 80, 200);
+var DAY_FOG = new THREE.Color('#e6e3dc'), NIGHT_FOG = new THREE.Color('#16242f');
+scene.fog = new THREE.Fog(DAY_FOG.clone(), 90, 260);
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 scene.environmentIntensity = 0.55;
 
-var camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.05, 600);
+var camera = new THREE.PerspectiveCamera(42, VW / VH, 0.05, 900);
 var hemi = new THREE.HemisphereLight(0xe8f0f8, 0x8a8170, 0.95);
 scene.add(hemi);
 var sun = new THREE.DirectionalLight(0xfff0dd, 2.3);
 sun.position.set(24, 52, 14);
 sun.target.position.set(-5, 0, -12);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(PHONE ? 1024 : 2048, PHONE ? 1024 : 2048);
 Object.assign(sun.shadow.camera, { left: -34, right: 34, top: 34, bottom: -34, near: 1, far: 150 });
 sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
 scene.add(sun, sun.target);
@@ -513,13 +530,20 @@ function addTag(world, show, cls, html) {
 }
 var proj = new THREE.Vector3();
 function placeTags() {
-  var W = innerWidth, H = innerHeight;
+  var W = VW, H = VH;
   tags.forEach(function (t) {
     var on = t.show(), p = typeof t.p === 'function' ? t.p() : t.p;
     if (on) {
       proj.copy(p).project(camera);
       if (proj.z > 1 || proj.z < -1) on = false;
-      else t.el.style.transform = 'translate(' + ((proj.x * 0.5 + 0.5) * W).toFixed(1) + 'px,' + ((-proj.y * 0.5 + 0.5) * H).toFixed(1) + 'px) translate(-50%,-100%)';
+      else {
+        // keep labels on screen: clamp the box, and slide the pointer tip to still point at the spot
+        var x = (proj.x * 0.5 + 0.5) * W, y = (-proj.y * 0.5 + 0.5) * H, w = t.el.offsetWidth || 0, m = 8;
+        var bx = Math.max(m + w / 2, Math.min(W - m - w / 2, x));
+        if (w && Math.abs(bx - x) > 0.5) t.el.style.setProperty('--tip', clamp(50 + (x - bx) / w * 100, 8, 92).toFixed(1) + '%');
+        else t.el.style.removeProperty('--tip');
+        t.el.style.transform = 'translate(' + bx.toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-50%,-100%)';
+      }
     }
     if (on !== t.on) { t.on = on; t.el.classList.toggle('on', on); }
   });
@@ -574,14 +598,22 @@ function updateCamera(dt) {
   } else { cur.pos.copy(to.pos); cur.look.copy(to.look); cur.fov = to.fov; }
   camera.position.copy(cur.pos);
   camera.lookAt(cur.look);
-  // keep the subject clear of the cards: to the right on wide screens, in the top half on phones
-  var wide = innerWidth > 980, k = 1 - Math.exp(-dt * 3);
+  // keep the subject clear of the cards: to the right on wide screens, above the bottom sheet on phones
+  var wide = VW > 980, phone = VW <= 760, k = 1 - Math.exp(-dt * 3);
   var wantX = wide ? (s.shift != null ? s.shift : 0.16) : 0;
-  var wantY = wide || s.orbit || shotName === 'overview' ? 0 : 0.2;
+  var wantY = wide ? 0 : phone ? (s.orbit ? 0.16 : shotName === 'overview' || shotName === 'privacy' ? 0.2 : 0.24) : (s.orbit || shotName === 'overview' ? 0 : 0.14);
   shift += (wantX - shift) * k; shiftY += (wantY - shiftY) * k;
-  if (Math.abs(shift) > 0.002 || Math.abs(shiftY) > 0.002) camera.setViewOffset(innerWidth, innerHeight, -shift * innerWidth, shiftY * innerHeight, innerWidth, innerHeight);
+  if (Math.abs(shift) > 0.002 || Math.abs(shiftY) > 0.002) camera.setViewOffset(VW, VH, -shift * VW, shiftY * VH, VW, VH);
   else if (camera.view) camera.clearViewOffset();
-  if (Math.abs(camera.fov - cur.fov) > 0.01) { camera.fov = cur.fov; camera.updateProjectionMatrix(); }
+  var f = portraitFov(cur.fov);
+  if (Math.abs(camera.fov - f) > 0.01) { camera.fov = f; camera.updateProjectionMatrix(); }
+}
+// a tall phone screen would crop the sides; widen the vertical FOV so the horizontal view stays usable
+function portraitFov(fov) {
+  var aspect = VW / VH, A0 = 0.82;
+  if (aspect >= A0) return fov;
+  var t = Math.tan(fov * Math.PI / 360) * A0 / aspect;
+  return Math.min(78, Math.atan(t) * 360 / Math.PI);
 }
 
 /* ---------- sections drive the shot and the active zone ---------- */
@@ -605,9 +637,125 @@ function setZone(id) {
   if (z && !z.boxes && !z.ready) { z.ready = true; B[id].init(z); paint(z); }
 }
 
+/* ---------- surroundings: a gridded ground with a heat pulse, a quiet city, rising warm air ---------- */
+var GROUND = {
+  uTime: { value: 0 }, uCenter: { value: new THREE.Vector2(-5, -12) }, uPulse: { value: 0.6 },
+  uBase: { value: new THREE.Color('#dedad2') }, uLine: { value: new THREE.Color('#c3beb3') }, uHeat: { value: new THREE.Color('#FE7743') }
+};
+var groundDay = { base: new THREE.Color('#dedad2'), line: new THREE.Color('#c3beb3') };
+var groundNight = { base: new THREE.Color('#131e27'), line: new THREE.Color('#25384a') };
+var city = null, motes = null;
+function buildSurroundings(box) {
+  // ground: a huge plane with a hole where the mall model sits (no z-fighting with its own floor)
+  var hx0 = box.min.x + 0.6, hx1 = box.max.x - 0.6, hz0 = box.min.z + 0.6, hz1 = box.max.z - 0.6, R = 1200;
+  var shape = new THREE.Shape([new THREE.Vector2(-R, -R), new THREE.Vector2(R, -R), new THREE.Vector2(R, R), new THREE.Vector2(-R, R)]);
+  // Shape lives in XY; rotating -90° about X maps (x, y) to (x, 0, -y)
+  shape.holes.push(new THREE.Path([new THREE.Vector2(hx0, -hz0), new THREE.Vector2(hx0, -hz1), new THREE.Vector2(hx1, -hz1), new THREE.Vector2(hx1, -hz0)]));
+  var gmat = new THREE.ShaderMaterial({
+    uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {}]),
+    fog: true,
+    vertexShader: [
+      'varying vec3 vW;',
+      '#include <fog_pars_vertex>',
+      'void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;',
+      '#include <fog_vertex>',
+      '}'
+    ].join('\n'),
+    fragmentShader: [
+      'uniform float uTime; uniform vec2 uCenter; uniform float uPulse; uniform vec3 uBase; uniform vec3 uLine; uniform vec3 uHeat;',
+      'varying vec3 vW;',
+      '#include <fog_pars_fragment>',
+      'float grid(vec2 p, float s, float w){ vec2 q = p / s; vec2 g = abs(fract(q - 0.5) - 0.5) / fwidth(q); return 1.0 - min(min(g.x, g.y) / w, 1.0); }',
+      'void main(){',
+      '  vec2 p = vW.xz;',
+      '  float minor = grid(p, 3.5, 1.0), major = grid(p, 17.5, 1.6);',
+      '  vec3 col = mix(uBase, uLine, minor * 0.45 + major * 0.85);',
+      '  float d = length(p - uCenter);',
+      '  float ph = fract(uTime * 0.16), r = ph * 150.0;',
+      '  float ring = exp(-pow((d - r) / 2.2, 2.0)) * (1.0 - ph) * uPulse;',
+      '  float ph2 = fract(uTime * 0.16 + 0.5), r2 = ph2 * 150.0;',
+      '  ring += exp(-pow((d - r2) / 2.2, 2.0)) * (1.0 - ph2) * uPulse;',
+      '  float glow = exp(-d * d / 900.0) * 0.22 * uPulse;',
+      '  col = mix(col, uHeat, clamp(ring * (0.35 + major * 0.65 + minor * 0.3) + glow, 0.0, 0.85));',
+      '  gl_FragColor = vec4(col, 1.0);',
+      '  #include <colorspace_fragment>',
+      '  #include <fog_fragment>',
+      '}'
+    ].join('\n')
+  });
+  Object.assign(gmat.uniforms, GROUND);
+  var ground = new THREE.Mesh(new THREE.ShapeGeometry(shape), gmat);
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -0.02; ground.renderOrder = -1;
+  scene.add(ground);
+
+  // city: instanced blocks on a street grid around the mall, taller with distance
+  var cells = [], S = 17.5, M = 9;
+  for (var gx = -M; gx <= M; gx++) for (var gz = -M; gz <= M; gz++) {
+    var cx = gx * S, cz = gz * S;
+    if (cx > box.min.x - 12 && cx < box.max.x + 12 && cz > box.min.z - 12 && cz < box.max.z + 12) continue;
+    var dist = Math.hypot(cx, cz);
+    if (dist > S * M) continue;
+    var per = Math.random() < 0.35 ? 1 : 2;
+    for (var b = 0; b < per; b++) cells.push([cx + (per > 1 ? (b ? 3.4 : -3.4) : 0) + rand(-1, 1), cz + rand(-1.5, 1.5), dist, per]);
+  }
+  var geo = new THREE.BoxGeometry(1, 1, 1); geo.translate(0, 0.5, 0);
+  var cmat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.92, metalness: 0 });
+  city = new THREE.InstancedMesh(geo, cmat, cells.length);
+  var m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), ps = new THREE.Vector3(), col = new THREE.Color();
+  var TONES = ['#ece8e0', '#e2ddd3', '#d8d3c9', '#cfd4d6', '#c3cbd0', '#e9e1d6', '#dcd6cc'];
+  cells.forEach(function (c, i) {
+    var far = clamp((c[2] - 70) / 90, 0, 1);
+    var h = rand(3, 9) + far * rand(4, 30) * (Math.random() < 0.25 ? 1.6 : 1);
+    var w = c[3] > 1 ? rand(4.5, 6.2) : rand(8, 12.5), d = rand(8, 12.5);
+    ps.set(c[0], -0.02, c[1]); sc.set(w, h, d); q.setFromAxisAngle(V3(0, 1, 0), Math.random() < 0.15 ? 0.1 : 0);
+    m4.compose(ps, q, sc); city.setMatrixAt(i, m4);
+    city.setColorAt(i, col.set(TONES[(Math.random() * TONES.length) | 0]));
+  });
+  city.instanceMatrix.needsUpdate = true; city.instanceColor.needsUpdate = true;
+  city.receiveShadow = false; city.castShadow = false;
+  scene.add(city);
+
+  // warm air: soft motes drifting up over the mall
+  var N = PHONE ? 140 : 260, pos = new Float32Array(N * 3), spd = new Float32Array(N);
+  for (var k = 0; k < N; k++) { pos[k * 3] = rand(box.min.x, box.max.x) * 0.8; pos[k * 3 + 1] = rand(0, 40); pos[k * 3 + 2] = rand(box.min.z, box.max.z) * 0.8; spd[k] = rand(0.6, 1.6); }
+  var pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  var spr = document.createElement('canvas'); spr.width = spr.height = 64;
+  var sx = spr.getContext('2d'), gr = sx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,170,110,1)'); gr.addColorStop(0.35, 'rgba(254,119,67,.6)'); gr.addColorStop(1, 'rgba(254,119,67,0)');
+  sx.fillStyle = gr; sx.fillRect(0, 0, 64, 64);
+  var pm = new THREE.PointsMaterial({ size: 0.7, map: new THREE.CanvasTexture(spr), transparent: true, opacity: 0.35, depthWrite: false, sizeAttenuation: true, toneMapped: false });
+  motes = new THREE.Points(pg, pm); motes.userData.spd = spd; motes.userData.box = box; motes.frustumCulled = false;
+  scene.add(motes);
+}
+function zoneCenter(id) {
+  var z = ZONES[id];
+  if (z && z.c) return z.c;
+  if (id === 'cooling' || id === 'leasing') return [-5, -11];
+  return [-5, -12];
+}
+function surroundingsTick(dt) {
+  GROUND.uTime.value += REDUCED ? 0 : dt;
+  var c = zoneCenter(activeZone), uc = GROUND.uCenter.value, k = 1 - Math.exp(-dt * 3);
+  uc.x += (c[0] - uc.x) * k; uc.y += (c[1] - uc.y) * k;
+  var want = activeZone ? 1 : 0.55;
+  GROUND.uPulse.value += (want - GROUND.uPulse.value) * k;
+  GROUND.uBase.value.copy(groundDay.base).lerp(groundNight.base, night);
+  GROUND.uLine.value.copy(groundDay.line).lerp(groundNight.line, night);
+  if (city) city.material.color.setScalar(1 - 0.82 * night);
+  if (motes && !REDUCED) {
+    var p = motes.geometry.attributes.position, a = p.array, s = motes.userData.spd, bx = motes.userData.box;
+    for (var i = 0; i < s.length; i++) {
+      a[i * 3 + 1] += s[i] * dt;
+      a[i * 3] += Math.sin(clock * 0.5 + i) * dt * 0.3;
+      if (a[i * 3 + 1] > 42) { a[i * 3 + 1] = rand(0, 3); a[i * 3] = rand(bx.min.x, bx.max.x) * 0.8; a[i * 3 + 2] = rand(bx.min.z, bx.max.z) * 0.8; }
+    }
+    p.needsUpdate = true;
+    motes.material.opacity = 0.4 + 0.45 * night;
+  }
+}
+
 /* ---------- loading the mall ---------- */
 var loaded = false, built = false;
-var pct = document.getElementById('pct'), bar = document.getElementById('bar');
 var loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
 loader.load('/views/usecases/mall.glb', function (g) {
   var m = g.scene;
@@ -625,10 +773,11 @@ loader.load('/views/usecases/mall.glb', function (g) {
     if (mt && mt.transparent) o.castShadow = false;
   });
   scene.add(m);
+  buildSurroundings(new THREE.Box3().setFromObject(m));
   Object.keys(ZONES).forEach(function (id) { if (!ZONES[id].boxes) buildZone(id, ZONES[id]); });
   buildTags();
   built = true; loaded = true;
-  document.getElementById('loader').classList.add('done');
+  UI.ready();
   if (Q.get('go')) {   // preview mode: show that section's card at the top of the page
     var sec = document.getElementById(Q.get('go'));
     document.querySelectorAll('main > section, .solid').forEach(function (s) { if (s !== sec) s.style.display = 'none'; });
@@ -639,10 +788,10 @@ loader.load('/views/usecases/mall.glb', function (g) {
   }
   pickSection();
 }, function (e) {
-  var p = e.total ? e.loaded / e.total : 0;
-  pct.textContent = Math.round(p * 100) + '%'; bar.style.width = (p * 100).toFixed(0) + '%';
+  UI.progress(e.loaded, e.total || 16798784);
 }, function (err) {
-  pct.textContent = 'failed: ' + (err && err.message ? err.message : err);
+  console.error('mall failed to load', err);
+  UI.fail('The 3D mall could not load. Everything else still works.');
 });
 
 function buildTags() {
@@ -686,6 +835,13 @@ function liveTick() {
   if (!built) return;
   Object.keys(B).forEach(function (id) { var z = ZONES[id]; if (z.ready) setLive(id, B[id].live(z)); });
   var Z = ZONES;
+  // feed the card charts
+  if (Z.entrance.ready) UI.sample('entrance', Z.entrance.stats.inN);
+  if (Z.storefront.ready) UI.sample('storefront', 100 * Z.storefront.stats.stopped / Z.storefront.stats.passed);
+  if (Z.seating.ready) UI.sample('seating', Z.seating.seats.filter(function (s) { return s.busy; }).length);
+  if (Z.queue.ready) UI.sample('queue', Z.queue.line.length);
+  if (Z.routes.ready) UI.sample('routes', 100 * Z.routes.stats.main / Math.max(1, Z.routes.stats.main + Z.routes.stats.side));
+  if (Z.capacity.ready) UI.sample('capacity', Z.capacity.agents.filter(function (a) { return !a.leaving; }).length);
   if (Z.entrance.ready) {
     Z.entrance.lineTag.el.innerHTML = 'counting line · in <b>' + fmt(Z.entrance.stats.inN) + '</b> · out <b>' + fmt(Z.entrance.stats.outN) + '</b>';
     setLive('pv', '768 temperatures, ' + inView(Z.entrance) + ' warm patches');
@@ -780,9 +936,10 @@ function frame(now) {
   clock += dt;
 
   var doPaint = simulate(dt);
+  surroundingsTick(dt);
   updateCamera(dt);
   renderer.setScissorTest(false);
-  renderer.setViewport(0, 0, innerWidth, innerHeight);
+  renderer.setViewport(0, 0, VW, VH);
   renderer.render(scene, camera);
 
   // privacy: what a camera at the entrance would see, drawn into the left tile
@@ -792,7 +949,7 @@ function frame(now) {
     pvCam.position.copy(s.position).add(z.V.clone().multiplyScalar(0.12));
     pvCam.lookAt(toWorld(z, 0, 0.35));
     pvCam.aspect = pr.width / pr.height; pvCam.updateProjectionMatrix();
-    var y = innerHeight - pr.bottom;
+    var y = VH - pr.bottom;
     renderer.setScissorTest(true);
     renderer.setScissor(pr.left, y, pr.width, pr.height);
     renderer.setViewport(pr.left, y, pr.width, pr.height);
@@ -807,8 +964,8 @@ requestAnimationFrame(frame);
 
 addEventListener('scroll', function () { if (built) pickSection(); }, { passive: true });
 addEventListener('resize', function () {
-  renderer.setSize(innerWidth, innerHeight);
-  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  if (!sizeStage()) return;
+  camera.aspect = VW / VH; camera.updateProjectionMatrix();
 });
 
 // smooth in-page jumps for the use-case index
